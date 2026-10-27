@@ -73,13 +73,13 @@ footer{display:grid;gap:10px;text-align:center}
 .searchrow input::placeholder{color:var(--ink-dim)}
 .searchrow button{font-size:14px;border-radius:999px;padding:8px 16px;background:var(--copper);color:var(--iron);border:1px solid var(--copper);font-weight:700;cursor:pointer}
 /* sheets */
-.sheet{position:absolute;left:0;right:0;bottom:0;overflow:auto;-webkit-overflow-scrolling:touch;background:var(--iron-2);border-top:1px solid var(--iron-3);border-radius:18px 18px 0 0;max-height:74%;z-index:2;
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:760px;margin:0 auto;overflow:auto;-webkit-overflow-scrolling:touch;background:var(--iron-2);border-top:1px solid var(--iron-3);border-radius:18px 18px 0 0;max-height:74%;z-index:2;
   padding:16px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
   transform:translateY(110%);visibility:hidden;transition:transform .4s cubic-bezier(.2,.8,.2,1),visibility 0s linear .4s;box-shadow:0 -20px 40px rgba(0,0,0,.45)}
 .sheet.open{transform:none;visibility:visible;transition:transform .4s cubic-bezier(.2,.8,.2,1),visibility 0s}
 .sheet.cook{top:var(--cooktop,12%);max-height:none;z-index:3;padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
 .sheet.top{z-index:5}
-.scrim{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .3s;z-index:4}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .3s;z-index:4}
 .scrim.on{opacity:1;pointer-events:auto}
 .head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}
 .head h2{font-family:var(--display);font-weight:500;font-size:20px;margin:0;text-wrap:balance}
@@ -132,6 +132,8 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
 .ing .got .t,.ing .got .q{color:var(--ink-dim);text-decoration:line-through}
 .ing .flash .q{animation:flash .9s ease}
 @keyframes flash{0%{color:var(--sage);text-shadow:0 0 10px var(--sage)}100%{color:var(--copper-hi)}}
+.ready{width:100%;margin:12px 0 4px;background:none;border:1px solid var(--iron-3);border-radius:10px;padding:11px;font-size:15px;color:var(--copper-hi);cursor:pointer}
+.ready.all{background:var(--copper);border-color:var(--copper);color:var(--iron);font-weight:700}
 .steps{display:grid;gap:8px;touch-action:pan-y}
 .step{padding:10px 12px;border-radius:10px;border:1px solid transparent;color:var(--ink-dim);font-size:15px;line-height:1.45;background:none;text-align:left;cursor:pointer;width:100%}
 .step b{font-family:var(--mono);font-size:11px;display:block;margin-bottom:2px;font-weight:400;letter-spacing:.06em}
@@ -142,12 +144,12 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
 .stepnav{display:flex;gap:8px;margin-top:12px;align-items:center;justify-content:space-between}
 .stepnav .say{font-size:12px;color:var(--ink-dim);text-align:center}
 /* talk button (cook view) */
-.talk{position:absolute;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:6;width:68px;height:68px;border-radius:50%;border:0;
+.talk{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:6;width:68px;height:68px;border-radius:50%;border:0;
   background:radial-gradient(circle at 50% 45%,#ffe9d2 0 14%,var(--copper) 40%,#7a4422 100%);box-shadow:0 0 0 0 rgba(217,138,78,.5),0 8px 24px rgba(0,0,0,.5);cursor:pointer;display:none;font-size:0}
 .talk.show{display:block}
 .talk.live{background:radial-gradient(circle at 50% 45%,#f1fff4 0 14%,var(--sage) 45%,#3f5f48 100%);animation:ring 1.2s ease-out infinite}
 @keyframes ring{0%{box-shadow:0 0 0 0 rgba(147,183,156,.6),0 8px 24px rgba(0,0,0,.5)}100%{box-shadow:0 0 0 22px rgba(147,183,156,0),0 8px 24px rgba(0,0,0,.5)}}
-.toast{position:absolute;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,-160%);background:var(--iron-2);border:1px solid var(--copper);color:var(--ink);padding:9px 16px;border-radius:999px;font-size:14px;z-index:9;transition:transform .35s cubic-bezier(.2,.8,.2,1);white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+.toast{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,-160%);background:var(--iron-2);border:1px solid var(--copper);color:var(--ink);padding:9px 16px;border-radius:999px;font-size:14px;z-index:9;transition:transform .35s cubic-bezier(.2,.8,.2,1);white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
 .toast.on{transform:translate(-50%,0)}
 .help{font-size:14px;line-height:1.5;color:var(--ink-dim)}
 .help b{color:var(--ink)}
@@ -242,6 +244,7 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
           <div class="ptip" id="ptip"></div>
         </div>
         <ul class="ing" id="cing"></ul>
+        <button class="ready" type="button" id="toSteps">Ready, go to the steps ↓</button>
       </div>
       <div>
         <h3>Steps <span>swipe, tap, or say “next”</span></h3>
@@ -487,16 +490,17 @@ $("libBtn").onclick=()=>{closeLow();const L=$("libList");L.innerHTML="";
 $("helpP").onclick=()=>{closeLow();$("helpS").classList.add("open")};
 
 /* ================= COOK VIEW (saved) ================= */
-let cook=store.get("cook",null),mult=1,got=new Set(cook?cook.got:[]);
+let scrolledStep=-1,cook=store.get("cook",null),mult=1,got=new Set(cook?cook.got:[]);
 const MEAL_NAMES={tonight:"tonight",lunch:"tomorrow’s lunch",dinner:"tomorrow’s dinner"};
 function saveCook(){if(cook){cook.got=[...got];store.set("cook",cook)}else store.set("cook",null);renderTonight()}
 function renderTonight(){const b=$("tonightBtn");if(cook&&FULL[cook.id]){const r=FULL[cook.id];b.innerHTML=`COOKING<br><b>${r.short}</b><br>Step ${cook.step+1} of ${r.steps.length}<br><span class="go">Resume ›</span>`;b.hidden=false}
   else{b.innerHTML=`TONIGHT<br><b>Nothing yet</b><br>Pick a recipe<br><span class="go">Help ›</span>`}}
 $("tonightBtn").onclick=()=>{if(cook&&FULL[cook.id]){openCook(cook.id,true)}else{$("helpS").classList.add("open")}};
 function frac(v){if(v>=20)return String(Math.round(v));const r=Math.max(.25,Math.round(v*4)/4),w=Math.floor(r),fr={0:"",0.25:"¼",0.5:"½",0.75:"¾"}[r-w];return(w?String(w):"")+fr}
+function unit(n,u){const v=n*mult;if(u===""||u==="g"||u==="lb")return u;const one=(u==="cloves"||u==="sprigs")?Math.max(1,Math.round(v))===1:v<=1;return one?u.replace(/s$/,""):u}
 function q(n,u){const v=n*mult;if(u===""||u==="cloves"||u==="sprigs")return String(Math.max(1,Math.round(v)));if(u==="g")return String(Math.round(v/5)*5||5);return frac(v)}
 function stepTime(s){let m=s.match(/(\d+)(?:–\d+)?\s*(hours?|minutes?)/i);if(!m)return 0;return +m[1]*(/^h/i.test(m[2])?3600:60)}
-function placeCook(){const a=$("app").getBoundingClientRect(),t=$("timers").getBoundingClientRect();$("app").style.setProperty("--cooktop",(t.bottom-a.top+8)+"px")}
+function placeCook(){const t=$("timers").getBoundingClientRect();document.documentElement.style.setProperty("--cooktop",(t.bottom+8)+"px")}
 function renderCook(flash){const r=FULL[cook.id],meals=new Set(cook.meals),servings=cook.people*meals.size;mult=servings/r.serves;
   $("ctitle").textContent=r.title;$("cfrom").textContent=r.from;
   $("cfacts").innerHTML=r.facts.map(f=>`<span>${f}</span>`).join("")+`<span>Makes <b>${servings}</b> · book serves ${r.serves}</span>`;
@@ -506,19 +510,20 @@ function renderCook(flash){const r=FULL[cook.id],meals=new Set(cook.meals),servi
   const tips=[];if(meals.size>1)tips.push(`Pack ${cook.people*(meals.size-1)} portions for ${list.filter(x=>x!=="tonight").join(" and ")} before serving.`);
   if(mult>=1.5)tips.push(cook.id==="apfel"?"Bigger batch: use two pans; bake time stays about the same.":"Bigger batch: brown in more rounds and use a larger pot. Cook time stays about the same.");
   if(mult<=.6)tips.push("Smaller batch: check doneness a little early.");$("ptip").textContent=tips.join(" ");
-  $("gotN").textContent=`${got.size}/${r.ing.length} ready`;
-  $("cing").innerHTML=r.ing.map(([n,u,t],i)=>`<li><button type="button" data-ing="${i}" class="${got.has(i)?"got":""}${flash?" flash":""}" aria-pressed="${got.has(i)}"><span class="box">${got.has(i)?"✓":""}</span><span class="q">${q(n,u)} ${u}</span><span class="t">${t}</span></button></li>`).join("");
+  $("gotN").textContent=`${got.size}/${r.ing.length} ready`;$("toSteps").classList.toggle("all",got.size===r.ing.length);
+  $("cing").innerHTML=r.ing.map(([n,u,t],i)=>`<li><button type="button" data-ing="${i}" class="${got.has(i)?"got":""}${flash?" flash":""}" aria-pressed="${got.has(i)}"><span class="box">${got.has(i)?"✓":""}</span><span class="q">${q(n,u)} ${unit(n,u)}</span><span class="t">${t}</span></button></li>`).join("");
   $("csteps").innerHTML=r.steps.map((s,i)=>{const tt=stepTime(s);return`<button type="button" class="step${i===cook.step?" on":i<cook.step?" past":""}" data-step="${i}"><b>STEP ${i+1} OF ${r.steps.length}</b>${s}${i===cook.step&&tt?`<span class="stimer" data-t="${tt}">⏱ Start ${human(tt)} timer</span>`:""}</button>`}).join("");
-  const on=$("csteps").querySelector(".step.on"),ck=$("cook");if(on&&!flash&&ck.classList.contains("open")){ck.scrollTo({top:Math.max(0,on.offsetTop-ck.clientHeight*.35),behavior:reduce?"auto":"smooth"})}
+  const on=$("csteps").querySelector(".step.on"),ck=$("cook");if(on&&cook.step!==scrolledStep&&ck.classList.contains("open")){scrolledStep=cook.step;ck.scrollTo({top:Math.max(0,on.offsetTop-ck.clientHeight*.35),behavior:reduce?"auto":"smooth"})}
   saveCook();return list.length>1?list.slice(0,-1).join(", ")+" and "+list.at(-1):list[0]}
 function openCook(id,resume){placeCook();if(!(resume&&cook&&cook.id===id)){cook={id,step:0,people:2,meals:["tonight"],got:[]};got=new Set()}
-  closeLow();$("cook").classList.add("open");$("talk").classList.add("show");renderCook();$("cook").scrollTop=0;
+  closeLow();$("cook").scrollTop=0;scrolledStep=resume&&cook.step>0?-1:cook.step;$("cook").classList.add("open");$("talk").classList.add("show");renderCook();
   const r=FULL[id];const msg=resume?`Picking up at step ${cook.step+1}.`:`Opening ${r.title}.`;setState("speaking",resume?`Picking up at <em>step ${cook.step+1}</em>.`:`Opening <em>${r.title}</em>.`,"");
   say(resume?`${msg} ${r.steps[cook.step]}`:`${msg} It serves ${r.serves} as written. Tell me how many people, or say next step.`)}
 function closeCook(){$("cook").classList.remove("open");$("talk").classList.remove("show");idle("")}
 function go(d,silent){if(!cook)return false;const r=FULL[cook.id],n=cook.step+d;if(n<0||n>=r.steps.length){say(n<0?"That’s the first step.":"That was the last step. Enjoy!");return false}
   cook.step=n;renderCook();setState("speaking",`<em>Step ${n+1}.</em> ${r.steps[n]}`,"");if(!silent)say(`Step ${n+1}. ${r.steps[n]}`);return true}
-$("next").onclick=()=>go(1);$("prev").onclick=()=>go(-1);$("readStep").onclick=()=>{if(cook)say(`Step ${cook.step+1}. ${FULL[cook.id].steps[cook.step]}`)};
+$("next").onclick=()=>go(1);$("prev").onclick=()=>go(-1);$("toSteps").onclick=()=>{const ck=$("cook"),st=$("csteps");ck.scrollTo({top:Math.max(0,st.offsetTop-44),behavior:reduce?"auto":"smooth"});if(got.size===FULL[cook.id].ing.length)say(`Step ${cook.step+1}. ${FULL[cook.id].steps[cook.step]}`)};
+$("readStep").onclick=()=>{if(cook)say(`Step ${cook.step+1}. ${FULL[cook.id].steps[cook.step]}`)};
 function startStepTimer(){if(!cook)return false;const r=FULL[cook.id],tt=stepTime(r.steps[cook.step]);if(!tt)return false;return addTimer(`${r.short} · step ${cook.step+1}`,tt)}
 $("csteps").addEventListener("click",e=>{if(e.target.closest(".stimer")){e.stopPropagation();startStepTimer();return}const s=e.target.closest(".step");if(s&&+s.dataset.step!==cook.step)go(+s.dataset.step-cook.step)});
 let sx=null;$("csteps").addEventListener("pointerdown",e=>{sx=e.clientX});$("csteps").addEventListener("pointerup",e=>{if(sx===null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>50)go(dx<0?1:-1)});
@@ -526,7 +531,7 @@ $("cing").addEventListener("click",e=>{const b=e.target.closest("[data-ing]");if
 $("pminus").onclick=()=>{if(cook.people>1){cook.people--;renderCook(true)}};
 $("pplus").onclick=()=>{if(cook.people<12){cook.people++;renderCook(true)}};
 $("plan").addEventListener("click",e=>{const b=e.target.closest("[data-meal]");if(!b||b.dataset.meal==="tonight")return;const m=b.dataset.meal,s=new Set(cook.meals);s.has(m)?s.delete(m):s.add(m);cook.meals=[...s];renderCook(true)});
-function readIngredients(){if(!cook)return;const r=FULL[cook.id];say("You’ll need: "+r.ing.map(([n,u,t])=>`${q(n,u).replace("¼"," and a quarter").replace("½"," and a half").replace("¾"," and three quarters")} ${u} ${t.split(",")[0]}`).join(", ")+".")}
+function readIngredients(){if(!cook)return;const r=FULL[cook.id];say("You’ll need: "+r.ing.map(([n,u,t])=>`${q(n,u).replace(/^(\d+)?¼/,(m,w)=>w?w+" and a quarter":"a quarter").replace(/^(\d+)?½/,(m,w)=>w?w+" and a half":"half a").replace(/^(\d+)?¾/,(m,w)=>w?w+" and three quarters":"three quarters")} ${unit(n,u)} ${t.split(",")[0]}`).join(", ")+".")}
 renderTonight();
 
 /* ================= VOICE IN ================= */
