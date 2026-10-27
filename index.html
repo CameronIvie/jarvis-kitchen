@@ -490,7 +490,7 @@ $("libBtn").onclick=()=>{closeLow();const L=$("libList");L.innerHTML="";
 $("helpP").onclick=()=>{closeLow();$("helpS").classList.add("open")};
 
 /* ================= COOK VIEW (saved) ================= */
-let scrolledStep=-1,cook=store.get("cook",null),mult=1,got=new Set(cook?cook.got:[]);
+let pendingPlan=null,scrolledStep=-1,cook=store.get("cook",null),mult=1,got=new Set(cook?cook.got:[]);
 const MEAL_NAMES={tonight:"tonight",lunch:"tomorrow’s lunch",dinner:"tomorrow’s dinner"};
 function saveCook(){if(cook){cook.got=[...got];store.set("cook",cook)}else store.set("cook",null);renderTonight()}
 function renderTonight(){const b=$("tonightBtn");if(cook&&FULL[cook.id]){const r=FULL[cook.id];b.innerHTML=`COOKING<br><b>${r.short}</b><br>Step ${cook.step+1} of ${r.steps.length}<br><span class="go">Resume ›</span>`;b.hidden=false}
@@ -515,10 +515,11 @@ function renderCook(flash){const r=FULL[cook.id],meals=new Set(cook.meals),servi
   $("csteps").innerHTML=r.steps.map((s,i)=>{const tt=stepTime(s);return`<button type="button" class="step${i===cook.step?" on":i<cook.step?" past":""}" data-step="${i}"><b>STEP ${i+1} OF ${r.steps.length}</b>${s}${i===cook.step&&tt?`<span class="stimer" data-t="${tt}">⏱ Start ${human(tt)} timer</span>`:""}</button>`}).join("");
   const on=$("csteps").querySelector(".step.on"),ck=$("cook");if(on&&cook.step!==scrolledStep&&ck.classList.contains("open")){scrolledStep=cook.step;ck.scrollTo({top:Math.max(0,on.offsetTop-ck.clientHeight*.35),behavior:reduce?"auto":"smooth"})}
   saveCook();return list.length>1?list.slice(0,-1).join(", ")+" and "+list.at(-1):list[0]}
-function openCook(id,resume){placeCook();if(!(resume&&cook&&cook.id===id)){cook={id,step:0,people:2,meals:["tonight"],got:[]};got=new Set()}
+function openCook(id,resume){placeCook();let planned=null;if(!(resume&&cook&&cook.id===id)){cook={id,step:0,people:2,meals:["tonight"],got:[]};got=new Set();if(pendingPlan){planned=pendingPlan;cook.people=planned.people||2;cook.meals=planned.meals||["tonight"]}}pendingPlan=null;
   closeLow();$("cook").scrollTop=0;scrolledStep=resume&&cook.step>0?-1:cook.step;$("cook").classList.add("open");$("talk").classList.add("show");renderCook();
-  const r=FULL[id];const msg=resume?`Picking up at step ${cook.step+1}.`:`Opening ${r.title}.`;setState("speaking",resume?`Picking up at <em>step ${cook.step+1}</em>.`:`Opening <em>${r.title}</em>.`,"");
-  say(resume?`${msg} ${r.steps[cook.step]}`:`${msg} It serves ${r.serves} as written. Tell me how many people, or say next step.`)}
+  const r=FULL[id],serv=cook.people*cook.meals.length;const msg=resume?`Picking up at step ${cook.step+1}.`:`Opening ${r.title}.`;
+  setState("speaking",resume?`Picking up at <em>step ${cook.step+1}</em>.`:planned?`Scaled to <em>${serv} servings</em>.`:`Opening <em>${r.title}</em>.`,"");
+  say(resume?`${msg} ${r.steps[cook.step]}`:planned?`${msg} I scaled it to ${serv} servings, that is ${Math.round(mult*100)/100} times the recipe.${cook.meals.length>1?` Pack ${cook.people*(cook.meals.length-1)} portions before serving.`:""}`:`${msg} It serves ${r.serves} as written. Tell me how many people, or say next step.`)}
 function closeCook(){$("cook").classList.remove("open");$("talk").classList.remove("show");idle("")}
 function go(d,silent){if(!cook)return false;const r=FULL[cook.id],n=cook.step+d;if(n<0||n>=r.steps.length){say(n<0?"That’s the first step.":"That was the last step. Enjoy!");return false}
   cook.step=n;renderCook();setState("speaking",`<em>Step ${n+1}.</em> ${r.steps[n]}`,"");if(!silent)say(`Step ${n+1}. ${r.steps[n]}`);return true}
@@ -529,7 +530,7 @@ $("csteps").addEventListener("click",e=>{if(e.target.closest(".stimer")){e.stopP
 let sx=null;$("csteps").addEventListener("pointerdown",e=>{sx=e.clientX});$("csteps").addEventListener("pointerup",e=>{if(sx===null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>50)go(dx<0?1:-1)});
 $("cing").addEventListener("click",e=>{const b=e.target.closest("[data-ing]");if(!b)return;const i=+b.dataset.ing;got.has(i)?got.delete(i):got.add(i);renderCook();if(got.size===FULL[cook.id].ing.length){toast("✓ Everything’s out. Ready to cook.")}});
 $("pminus").onclick=()=>{if(cook.people>1){cook.people--;renderCook(true)}};
-$("pplus").onclick=()=>{if(cook.people<12){cook.people++;renderCook(true)}};
+$("pplus").onclick=()=>{if(cook.people<20){cook.people++;renderCook(true)}};
 $("plan").addEventListener("click",e=>{const b=e.target.closest("[data-meal]");if(!b||b.dataset.meal==="tonight")return;const m=b.dataset.meal,s=new Set(cook.meals);s.has(m)?s.delete(m):s.add(m);cook.meals=[...s];renderCook(true)});
 function readIngredients(){if(!cook)return;const r=FULL[cook.id];say("You’ll need: "+r.ing.map(([n,u,t])=>`${q(n,u).replace(/^(\d+)?¼/,(m,w)=>w?w+" and a quarter":"a quarter").replace(/^(\d+)?½/,(m,w)=>w?w+" and a half":"half a").replace(/^(\d+)?¾/,(m,w)=>w?w+" and three quarters":"three quarters")} ${unit(n,u)} ${t.split(",")[0]}`).join(", ")+".")}
 renderTonight();
@@ -596,8 +597,8 @@ async function doHandle(raw){
     if(/\b(ingredients|what do i need|shopping list)\b/.test(t)){setState("speaking","Reading the ingredients…","");await readIngredients();return}
     const np=t.match(/\bfor (\d+)(?: people| persons?| of us| servings?)?\b/)||t.match(/\b(\d+) (people|persons|of us)\b/);
     if(np||/\b(double|triple|half|halve|tonight|lunch|dinner|leftovers?)\b/.test(t)){
-      if(np)cook.people=Math.max(1,Math.min(12,+np[1]));
-      if(/\bdouble\b/.test(t))cook.people=Math.min(12,cook.people*2);if(/\btriple\b/.test(t))cook.people=Math.min(12,cook.people*3);if(/\b(half|halve)\b/.test(t))cook.people=Math.max(1,Math.round(cook.people/2));
+      if(np)cook.people=Math.max(1,Math.min(20,+np[1]));
+      if(/\bdouble\b/.test(t))cook.people=Math.min(20,cook.people*2);if(/\btriple\b/.test(t))cook.people=Math.min(20,cook.people*3);if(/\b(half|halve)\b/.test(t))cook.people=Math.max(1,Math.round(cook.people/2));
       const m=new Set(["tonight"]);if(/\blunch\b/.test(t))m.add("lunch");if(/\b(tomorrow'?s? dinner|tomorrow night|dinner tomorrow)\b/.test(t))m.add("dinner");if(/\bleftovers?\b/.test(t)&&m.size===1)m.add("lunch");
       if(np||/\b(lunch|dinner|leftovers?|tonight)\b/.test(t))cook.meals=[...m];
       const when=renderCook(true),serv=cook.people*cook.meals.length;
@@ -609,7 +610,16 @@ async function doHandle(raw){
   if(/^(close|go home|home|done|exit|cancel|never ?mind|that'?s all)$/.test(t)){closeLow();if(cooking)closeCook();return respond("Okay.")}
   if(/\b(what can (i|you) say|help)\b/.test(t)){$("helpS").classList.add("open");return respond("Here’s what I can do.")}
   // search
-  const query=t.replace(/^(find|search( for)?|look up|show me|where( is| are|'s)?|do (we|i) have|i want( to make)?|let'?s make|how do (i|you) make|what can i make with|recipes? for|a recipe for|cook)\s+/,"").replace(/\b(recipe|recipes|please)\b/g,"").trim();
+  // pull any "for 12 people / dinner and lunch" out of a search and remember it for when a recipe opens
+  let plan=null;{const pm=t.match(/\bfor (\d+)(?: people| persons?| of us| servings?)?\b/)||t.match(/\b(\d+) (?:people|persons|of us)\b/);
+    const ml=/\blunch\b/.test(t),md=/\b(tomorrow'?s? dinner|tomorrow night|dinner tomorrow)\b/.test(t),mt=/\b(dinner|tonight|supper)\b/.test(t)||ml||md,lo=/\bleftovers?\b/.test(t);
+    if(pm||ml||md||lo){const m=["tonight"];if(ml||(lo&&!md))m.push("lunch");if(md)m.push("dinner");plan={people:pm?Math.max(1,Math.min(20,+pm[1])):2,meals:m}}}
+  pendingPlan=plan;
+  const query=t.replace(/\bfor (\d+)(?: people| persons?| of us| servings?)?\b|\b\d+ (people|persons|of us)\b/g," ")
+    .replace(/\b(for |and |with )?(tonight'?s? |tomorrow'?s? )?(dinner|lunch|supper|leftovers?)( tomorrow| tonight)?\b/g," ").replace(/\btonight\b/g," ")
+    .replace(/\s+/g," ").trim()
+    .replace(/^(i need|i'd like|i would like|get me|give me|pull up|find|search( for)?|look up|show me|where( is| are|'s)?|do (we|i) have|i want( to make)?|let'?s make|how do (i|you) make|what can i make with|recipes? for|a recipe for|cook|make)\s+/,"")
+    .replace(/^(a|an|some|the)\s+/,"").replace(/\b(recipe|recipes|please|for|and)\b/g," ").replace(/\s+/g," ").trim();
   if(!query)return respond("What should I look for?");
   if(cooking)closeCook();
   setState("thinking",`Checking ${Object.keys(BOOKS).length} books for <em>${query}</em>…`,"");await wait(reduce?0:500);
@@ -617,7 +627,8 @@ async function doHandle(raw){
   if(!n){showResults("",[]);return respond(`Nothing for <em>${query}</em> yet.`,`I couldn't find ${query} in the library.`,"Try another dish, or browse the library")}
   showResults(`${n} ${n===1?"match":"matches"} for “${query}”`,hits);
   const top=hits.slice(0,3).map((r,i)=>`${["One","Two","Three"][i]}, ${r.n.replace(/\(.*\)/,"")}${r.full?", full recipe":`, ${BOOKS[r.b].title.replace(/\(.*\)/,"")} page ${r.p}`}`);
-  return respond(`${n} ${n===1?"recipe":"recipes"} for <em>${query}</em>.`,`I found ${n}. ${top.join(". ")}.${n>3?" And more on screen.":""} Say open the first one, or pick a number.`,"Say “open the first one”")}
+  const pl=plan?` I’ll scale it to ${plan.people*plan.meals.length} servings when you open it.`:"";
+  return respond(`${n} ${n===1?"recipe":"recipes"} for <em>${query}</em>.${plan?` Scaling to <em>${plan.people*plan.meals.length} servings</em>.`:""}`,`I found ${n}. ${top.join(". ")}.${n>3?" And more on screen.":""}${pl} Say open the first one, or pick a number.`,"Say “open the first one”")}
 
 /* typed commands go through the same parser */
 $("asks").addEventListener("click",e=>{const b=e.target.closest(".chip");if(b){unlockAudio();handle(b.dataset.q)}});
