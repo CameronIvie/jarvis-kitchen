@@ -25,11 +25,11 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0}
+html,body{height:100%;height:100dvh;margin:0}
 body{background:var(--iron);color:var(--ink);font-family:var(--body);overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%}
 button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
 :focus-visible{outline:2px solid var(--copper);outline-offset:2px}
-.app{position:relative;height:100%;display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;max-width:760px;margin:0 auto;
+.app{position:relative;height:100%;height:100dvh;overflow:hidden;display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;max-width:760px;margin:0 auto;
   padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .clock{font-family:var(--display);font-weight:300;font-size:clamp(42px,12vw,84px);line-height:.9;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
@@ -75,8 +75,8 @@ footer{display:grid;gap:10px;text-align:center}
 /* sheets */
 .sheet{position:absolute;left:0;right:0;bottom:0;overflow:auto;-webkit-overflow-scrolling:touch;background:var(--iron-2);border-top:1px solid var(--iron-3);border-radius:18px 18px 0 0;max-height:74%;z-index:2;
   padding:16px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
-  transform:translateY(105%);transition:transform .4s cubic-bezier(.2,.8,.2,1);box-shadow:0 -20px 40px rgba(0,0,0,.45)}
-.sheet.open{transform:none}
+  transform:translateY(110%);visibility:hidden;transition:transform .4s cubic-bezier(.2,.8,.2,1),visibility 0s linear .4s;box-shadow:0 -20px 40px rgba(0,0,0,.45)}
+.sheet.open{transform:none;visibility:visible;transition:transform .4s cubic-bezier(.2,.8,.2,1),visibility 0s}
 .sheet.cook{top:var(--cooktop,12%);max-height:none;z-index:3;padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))}
 .sheet.top{z-index:5}
 .scrim{position:absolute;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .3s;z-index:4}
@@ -392,7 +392,7 @@ function saveTimers(){store.set("timers",timers)}
 function fmt(s){s=Math.max(0,s);const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return(h?h+":"+String(m).padStart(2,"0"):String(m).padStart(2,"0"))+":"+String(x).padStart(2,"0")}
 function spoken(s){s=Math.max(0,Math.round(s));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60,p=[];if(h)p.push(h+(h===1?" hour":" hours"));if(m)p.push(m+(m===1?" minute":" minutes"));if(!h&&x&&m<5)p.push(x+" seconds");return p.join(" ")||"less than a second"}
 function human(t){return t>=3600?(t%3600?fmt(t):(t/3600)+" h"):(t%60?fmt(t):(t/60)+" min")}
-let tKey="";
+let tKey=null;
 function renderTimers(){const box=$("timers"),key=timers.map(t=>t.id).join(",");
   if(key!==tKey){tKey=key;box.classList.toggle("empty",!timers.length);
     box.innerHTML=timers.map(t=>`<button type="button" class="tm" data-id="${t.id}"><svg viewBox="0 0 34 34" aria-hidden="true"><circle class="trk" cx="17" cy="17" r="14" fill="none" stroke-width="3.5"/><circle class="arc" cx="17" cy="17" r="14" fill="none" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="${C}"/></svg><span class="meta"><span class="lbl"></span><span class="val"></span></span></button>`).join("")
