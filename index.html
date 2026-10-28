@@ -786,13 +786,13 @@ function roleOf(c){const w=norm(c).split(" ");if(/fennel seed|seeds?,? (fennel|c
 function ingName(c){return c.replace(/\s*\(.*?\)/g,"").replace(/^(lemon|lime|orange): .*/i,"$1").replace(/: /," ").trim().toLowerCase()}
 const AMOUNTS=[[/garlic/,3,"cloves","garlic, minced"],[/shallot/,1,"","shallot, minced"],[/leek/,1,"","leek, sliced"],[/onion/,1,"","onion, sliced"],[/ginger/,1,"tbsp","fresh ginger, grated"],[/scallion/,3,"","scallions, sliced"],[/lemongrass/,1,"","stalk lemongrass, minced"],
   [/rosemary|thyme/,2,"sprigs",null],[/bay/,1,"","bay leaf"],[/lemon|lime|orange|yuzu|grapefruit/,1,"",null,"juice and zest"],[/vinegar/,1,"tbsp",null],[/wine|vermouth|sherry/,0.5,"cups",null],[/verjus/,2,"tbsp","verjus"],
-  [/butter/,2,"tbsp","butter"],[/cream|crème|creme/,0.5,"cups",null],[/yogurt/,0.5,"cups","yogurt"],[/coconut/,1,"cups","coconut milk"],[/oil/,2,"tbsp",null],
+  [/\bbutter\b/,2,"tbsp","butter"],[/cream|crème|creme/,0.5,"cups",null],[/yogurt/,0.5,"cups","yogurt"],[/coconut/,1,"cups","coconut milk"],[/oil/,2,"tbsp",null],
   [/cayenne|saffron|clove/,0.25,"tsp",null],[/cinnamon|nutmeg|allspice|cardamom|anise/,0.5,"tsp",null],[/mustard/,1,"tbsp",null],[/horseradish|wasabi/,1,"tbsp",null],
   [/anchov/,3,"","anchovy fillets, chopped"],[/caper/,1,"tbsp","capers"],[/olive(?!\s*oil)/,0.25,"cups","olives, pitted"],[/miso/,1,"tbsp","miso"],[/soy/,1,"tbsp","soy sauce"],[/honey|maple|molasses/,1,"tbsp",null],[/sugar/,2,"tbsp",null],[/vanilla/,1,"tsp","vanilla"],[/chocolate/,2,"oz",null]];
 function amountFor(c,role){const n=ingName(c);for(const[re,q,u,label,extra]of AMOUNTS)if(re.test(n))return[q,u,(label||n)+(extra?`, ${extra}`:"")];
   if(role==="herb")return[2,"tbsp",`${n}, chopped`];if(role==="spice")return[1,"tsp",n];if(role==="cheese")return/mascarpone|ricotta|goat|crème|cream/.test(n)?[0.25,"cups",`${n}, for dolloping`]:[0.25,"cups",`${n}, grated or crumbled`];
   if(role==="nut")return[0.25,"cups",`${n}, toasted and chopped`];if(role==="veg")return[/potato|squash|beet|parsnip|carrot/.test(n)?1:2,/potato|squash|beet|parsnip|carrot/.test(n)?"lb":"cups",/peas|corn|beans|lentils|rice|couscous|arugula|spinach|greens|watercress|chickpeas|polenta/.test(n)?n:`${n}, cut into bite-size pieces`];
-  if(role==="fruit")return[2,"",`${n}, sliced`];return[1,"",n]}
+  if(role==="fruit")return/cherr|berr|grape|cranberr|raisin|date/.test(n)?[1,"cups",`${n}${/cherr/.test(n)?", pitted":""}`]:[2,"",`${n}, sliced`];return[1,"",n]}
 function mainKind(n){const r=roleOf(n);if(r==="protein")return/salmon|tuna|cod|halibut|trout|bass|snapper|sole|swordfish|mackerel|sardine|monkfish|grouper|flounder|turbot|skate|mahi|bluefish/.test(n)?"fish":/shrimp|scallop|crab|lobster|clam|mussel|oyster|squid|calamari|octopus/.test(n)?"shellfish":/egg/.test(n)?"eggs":/tofu/.test(n)?"tofu":"meat";return r==="fruit"?"fruit":"veg"}
 function pairKeys(e){if(!e._pk)e._pk=new Set(e.pairs.map(p=>wkey(core(p.t))));return e._pk}
 function entryFor(c){const f=findEntries(c);return f.length&&f[0].sc>=55?follow(f[0]).e:null}
@@ -845,11 +845,11 @@ function buildRecipe(words,seed){
   const feat=[...forcedP,...cond,...R("herb"),...acid,...veg.filter(x=>!x.forced),...chs,...nut,...spice].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,3);const withs=spokenList(feat.map(lbl));
   if(method==="sear"){title=`Pan-seared ${mainName} with ${withs}`;facts=["Prep 10 min","Cook 20 min","Skillet"];
     steps=[`Pat the ${mainName} dry and season with the ${spokenList(["salt","pepper",...spice.map(lbl)])}.`,
-      `Heat the ${nm(fat1)} in a heavy skillet over medium-high until it shimmers.`,
-      `Sear the ${mainName} ${mins} minutes per side, until browned${/chicken|turkey/.test(mainName)?" and cooked through (165°F inside)":/pork/.test(mainName)?" and 145°F inside":kind==="meat"?" and cooked to your liking":" and just cooked through"}. ${kind==="shellfish"?"Move to a plate.":"Move to a plate and rest 5 minutes."}`,
-      ...(aro.length?[`Lower the heat to medium. Add the ${L(aro)} and cook 2 minutes, until fragrant.`]:[]),
+      ...(/duck/.test(mainName)?[]:[`Heat the ${nm(fat1)} in a heavy skillet over medium-high until it shimmers.`]),
+      /duck/.test(mainName)?`Score the skin. Set the duck breasts skin-side down in a cold skillet, then cook over medium 8 minutes until the fat renders and the skin is crisp. Flip and cook 3 minutes more for medium-rare. Move to a plate and rest 5 minutes.`:`Sear the ${mainName} ${mins} minutes per side, until browned${/chicken|turkey/.test(mainName)?" and cooked through (165°F inside)":/pork/.test(mainName)?" and 145°F inside":kind==="meat"?" and cooked to your liking":" and just cooked through"}. ${kind==="shellfish"?"Move to a plate.":"Move to a plate and rest 5 minutes."}`,
+      ...(aro.length?[`${/duck/.test(mainName)?"Pour off all but 2 tablespoons of the fat. ":""}Lower the heat to medium. Add the ${L(aro)} and cook 2 minutes, until fragrant.`]:[]),
       ...(acidStep?[acidStep]:[]),
-      ...(veg.length?[`Add the ${L(veg)} and cook 5 minutes, until tender.`]:[]),
+      ...(veg.length?[veg.some(x=>/squash|potato|carrot|beet|parsnip|turnip|rutabaga|celery root/.test(x.c))?`Add the ${L(veg)} with ¼ cup water. Cover and cook 12 minutes, until tender.`:`Add the ${L(veg)} and cook 5 minutes, until tender.`]:[]),
       ...(cond.length?[`Stir in the ${L(cond)}.`]:[]),
       ...(fat2?[`Turn off the heat and swirl in the ${nm(fat2)} to make a quick pan sauce.`]:[]),
       `Stir in the ${herb.length?L(herb):"pan juices"}, taste for salt, and spoon everything over the ${mainName}.`,
