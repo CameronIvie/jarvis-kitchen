@@ -255,7 +255,6 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
     <div class="help">
       Tap the brain (or the round button while cooking), then talk.
       <ul>
-        <li><b>“Build me a recipe with salmon”</b>, “create something with pork and apples”, then “another one” for a new idea</li>
         <li><b>“What goes with mascarpone?”</b>, “what pairs with lamb”, “what goes with figs and goat cheese” (needs The Flavor Bible loaded in the Library)</li>
         <li><b>“Short ribs”</b>, “find chicken thighs”, “what can I make with rhubarb”</li>
         <li><b>“Open the first one”</b>, “open number two”</li>
@@ -440,8 +439,8 @@ function showEntry(hit){const {b,e}=follow(hit);lastPair={b,e,spoken:0};closeLow
   if(e.aff&&e.aff.length)h+=`<div class="tier"><h3>Flavor combos</h3><ul class="aff">${e.aff.map(a=>`<li>${a}</li>`).join("")}</ul></div>`;
   if(e.avoid&&e.avoid.length)h+=`<div class="tier avoid"><h3>Avoid</h3><div class="pl">${e.avoid.map(a=>`<span class="pi">${a}</span>`).join("")}</div></div>`;
   if(!e.pairs.length&&!e.aff.length)h+=`<div class="empty">No pairing list on this page. Check the book.</div>`;
-  h=`<button type="button" class="addbook" id="pBuild" style="margin:0 0 14px">🍳 Build a recipe with ${e.n.replace(/\s*—\s*in general/i,"")}</button>`+h;
-  $("pBody").innerHTML=h;$("pBuild").onclick=()=>{unlockAudio();answerBuild(sname(e.n))};$("pairS").scrollTop=0;$("pairS").classList.add("open");
+  if(BUILDER_ON)h=`<button type="button" class="addbook" id="pBuild" style="margin:0 0 14px">🍳 Build a recipe with ${e.n.replace(/\s*—\s*in general/i,"")}</button>`+h;
+  $("pBody").innerHTML=h;if($("pBuild"))$("pBuild").onclick=()=>{unlockAudio();answerBuild(sname(e.n))};$("pairS").scrollTop=0;$("pairS").classList.add("open");
   $("pPage").onclick=()=>say(`${e.n} is on page ${e.p} of ${b.title}.`);return{b,e}}
 function topPairs(e,from){const order=[...e.pairs].sort((x,y)=>y.l-x.l);const names=[];for(const p of order){const c=core(p.t).toLowerCase();if(c&&!names.includes(c))names.push(c)}return names.slice(from||0)}
 function affSpeech(a){const parts=a.split("+").map(x=>x.trim().split(/,| esp\./)[0]);return parts.length>1?parts[0]+" with "+spokenList(parts.slice(1)):a}
@@ -714,7 +713,7 @@ async function doHandle(raw){
   const bm=t.match(/^(?:can you |could you |please |let's )?(?:build|create|invent|design|make up|come up with|dream up|make|give|cook up|whip up)(?: me| us)? (?:a |an |some )?(?:new |simple |quick |easy |good )?(?:recipe|dish|meal|something|dinner|lunch|idea)s? (?:with|using|around|for|from|featuring|that uses|out of) (.+)$/)
     ||t.match(/^(?:can you |please )?(?:build|create|invent|design|make up|come up with)(?: me| us)? (?:a |an )?(.+?) (?:recipe|dish|meal)$/)
     ||t.match(/^(?:build|create|invent)(?: me| us)? (?:a )?(?:recipe )?(?:with |using )?(.+)$/);
-  if(bm&&/[a-z]{3}/.test(bm[1])&&!/^\d/.test(bm[1]))return answerBuild(bm[1]);
+  if(bm&&/[a-z]{3}/.test(bm[1])&&!/^\d/.test(bm[1])){if(BUILDER_ON)return answerBuild(bm[1]);return respond("Recipe building is coming soon.","Recipe building is coming soon. For now, ask me what goes with an ingredient.","Try “what goes with salmon?”")}
   // flavor pairings
   const pm=t.match(/^(?:so |and |ok |okay |hey )?(?:what|which|whats|what's)(?: else| kind of \w+| things?| flavou?rs?| ingredients?| foods?)? (?:goes?|go|pairs?|works?|tastes? good|is good|are good|would go|should i (?:pair|serve|put|use|add)|can i (?:pair|serve|put|use|add)|do i (?:pair|serve)|to (?:pair|serve)) (?:well |good |great |nicely |best )?(?:with|alongside|together with) (.+)$/)
     ||t.match(/^(?:what are |show me |give me |find |look up )?(?:the )?(?:pairings?|flavou?r pairings?|flavou?r ideas?|matches|flavou?r bible) (?:for|with|on) (.+)$/)
@@ -764,7 +763,8 @@ async function doHandle(raw){
   const pl=plan?` I’ll scale it to ${plan.people*plan.meals.length} servings when you open it.`:"";
   return respond(`${n} ${n===1?"recipe":"recipes"} for <em>${query}</em>.${plan?` Scaling to <em>${plan.people*plan.meals.length} servings</em>.`:""}`,`I found ${n}. ${top.join(". ")}.${n>3?" And more on screen.":""}${pl} Say open the first one, or pick a number.`,"Say “open the first one”")}
 
-/* typed comman/* ================= RECIPE BUILDER (from Flavor Bible pairings) ================= */
+/* typed commanconst BUILDER_ON=false; // hidden until a real AI writes the recipes
+/* ================= RECIPE BUILDER (from Flavor Bible pairings) ================= */
 const ROLE_WORDS={
   protein:"chicken turkey duck quail pheasant squab cornish beef steak brisket veal lamb pork venison rabbit goat salmon tuna cod halibut trout bass snapper sole swordfish mackerel sardines monkfish grouper flounder turbot skate mahi bluefish shrimp scallops crab lobster clams mussels oysters squid calamari octopus tofu eggs",
   aromatic:"garlic shallots shallot onions onion leeks leek ginger scallions lemongrass",
