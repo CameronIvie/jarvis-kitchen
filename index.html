@@ -389,7 +389,7 @@ function findEntries(q,all){const k=wkey(q),out=[];if(!k)return out;const qs=k.s
     if(sc)out.push({b,e,sc})})});
   out.sort((x,y)=>y.sc-x.sc);if(all)return out;const top=out.filter(o=>o.sc>=95&&(o.e.pairs.length||o.e.see));return top.length?top:out}
 function follow(hit){let {b,e}=hit,n=0;while(!e.pairs.length&&/\bsee\b/i.test(e.see||"")&&n++<2){const tgt=(e.see.match(/see(?: also)? ([^)]+)/i)||[])[1];if(!tgt)break;const f=findEntries(tgt.split(/ and |;/)[0].replace(/,/g," "),true).filter(o=>o.e!==e&&(o.e.pairs.length||o.e.aff.length));if(!f.length)break;e=f[0].e;b=f[0].b}return{b,e}}
-const TIERS=[[4,"Holy grail"],[3,"Very highly recommended"],[2,"Often recommended"],[1,"Also works"]];
+const TIERS=[[4,"Holy grail"],[3,"Very highly recommended"],[2,"Recommended"],[1,"Also goes with"]];
 function sname(n){n=n.replace(/\(.*?\)/g,"").replace(/\s*—\s*in general/i,"").replace(/\s*\/\s*/g," and ").trim();const m=n.match(/^([^,—]+), ([^,—]+?)(?:\s*—\s*(.+))?$/);
   return(m?`${m[3]?m[3]+" ":""}${m[2]} ${m[1]}`:n.replace(/\s*—\s*/g," ")).replace(/\s+/g," ").trim().toLowerCase()}
 function spokenList(a){a=[...new Set(a)];return a.length<2?(a[0]||""):a.slice(0,-1).join(", ")+" and "+a.at(-1)}
@@ -400,7 +400,7 @@ function showEntry(hit){const {b,e}=follow(hit);lastPair={b,e,spoken:0};closeLow
   let h=`<button type="button" class="pagebtn" id="pPage"><span>${b.title}${b.shelf?`<br><span class="book">${b.shelf}</span>`:""}</span><span style="text-align:right"><span class="book">page</span><br><b>${e.p}</b></span></button>`;
   if(props)h+=`<div class="pfacts">${props}</div>`;
   if(e.see)h+=`<p class="note" style="margin:0 0 12px">${e.see}</p>`;
-  TIERS.forEach(([l,name])=>{const it=e.pairs.filter(p=>p.l===l);if(it.length)h+=`<div class="tier"><h3>${name}<span>${it.length}</span></h3><div class="pl">${pairHTML(it)}</div></div>`});
+  const flat=e.pairs.length&&e.pairs.every(p=>p.l===1);TIERS.forEach(([l,name])=>{if(flat)name="Goes with";const it=e.pairs.filter(p=>p.l===l);if(it.length)h+=`<div class="tier"><h3>${name}<span>${it.length}</span></h3><div class="pl">${pairHTML(it)}</div></div>`});
   if(e.aff&&e.aff.length)h+=`<div class="tier"><h3>Flavor combos</h3><ul class="aff">${e.aff.map(a=>`<li>${a}</li>`).join("")}</ul></div>`;
   if(e.avoid&&e.avoid.length)h+=`<div class="tier avoid"><h3>Avoid</h3><div class="pl">${e.avoid.map(a=>`<span class="pi">${a}</span>`).join("")}</div></div>`;
   if(!e.pairs.length&&!e.aff.length)h+=`<div class="empty">No pairing list on this page. Check the book.</div>`;
