@@ -882,9 +882,11 @@ async function answerBuild(q,again){
 
 /* categories */
 function flavorBooks(){return REF.filter(b=>b.kind==="pairings")}
+const NOT_FOOD=/cuisines?\b|\bdishes\b|^(aroma|appetizer|autumn|spring|summer|winter|menu|techniques|desserts|brunch|christmas|full|acidity|bitterness|coldness|hotness|sourness|sweetness|saltiness|salads|sous-vide cooking|weight|volume|texture|taste|heat|richness)\b/i;
+const isFood=e=>!NOT_FOOD.test(e.n.trim())&&e.pairs.length>0;
 function openFlavor(filter){closeLow();const bks=flavorBooks(),body=$("flavBody");
   if(!bks.length){body.innerHTML=`<div class="empty">The Flavor Bible isn’t on this device yet.</div><button class="addbook" type="button" onclick="$('flavS').classList.remove('open');$('libBtn').click()">Open Library to add it</button>`;$("flavS").classList.add("open");return}
-  const all=bks.flatMap(b=>b.entries.filter(e=>e.pairs.length).map(e=>({b,e}))).sort((x,y)=>x.e.n.localeCompare(y.e.n));
+  const all=bks.flatMap(b=>b.entries.filter(isFood).map(e=>({b,e}))).sort((x,y)=>x.e.n.localeCompare(y.e.n));
   body.innerHTML=`<input class="ffilter" id="fq" type="search" placeholder="Filter ${all.length} ingredients…" aria-label="Filter ingredients"><div id="fList"></div>`;
   const draw=q=>{q=norm(q||"");const hit=all.filter(o=>!q||norm(o.e.n).includes(q));let h="",L="";
     hit.forEach((o,i)=>{const l=o.e.n[0].toUpperCase();if(l!==L){if(L)h+="</div>";h+=`<div class="letter">${l}</div><div class="fl">`;L=l}
@@ -894,7 +896,7 @@ function openFlavor(filter){closeLow();const bks=flavorBooks(),body=$("flavBody"
   $("fList").onclick=e=>{const b=e.target.closest("[data-fi]");if(!b)return;const r=showEntry(all[+b.dataset.fi]);setState("speaking",`<em>${r.e.n}</em> · page ${r.e.p}`,"Say “what goes with…” any time")};
   $("flavS").scrollTop=0;$("flavS").classList.add("open")}
 function openRecipes(){closeLow();if(!RECIPES.length){showResults("Recipes",[]);$("list").innerHTML=`<div class="empty">No recipes yet. Once her cookbooks are scanned, they show up here and Bobbity can walk you through them step by step.</div>`;return}const hits=[...RECIPES].sort((a,b)=>(b.full?1:0)-(a.full?1:0)||a.n.localeCompare(b.n));showResults(`Recipes · ${hits.length}`,hits)}
-function updateCats(){const f=flavorBooks();$("flavN").textContent=f.length?`${f.reduce((n,b)=>n+b.entries.length,0)} ingredients`:"Add The Flavor Bible";$("recN").textContent=RECIPES.length?`${RECIPES.length} recipes`:"Coming soon"}
+function updateCats(){const f=flavorBooks();$("flavN").textContent=f.length?`${f.reduce((n,b)=>n+b.entries.filter(isFood).length,0)} ingredients`:"Add The Flavor Bible";$("recN").textContent=RECIPES.length?`${RECIPES.length} recipes`:"Coming soon"}
 $("asks").addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(!b)return;unlockAudio();b.dataset.open==="flavor"?openFlavor():openRecipes()});
 
 $("form").addEventListener("submit",e=>{e.preventDefault();const v=$("q").value.trim();if(!v)return;$("q").value="";$("q").blur();unlockAudio();handle(v)});
