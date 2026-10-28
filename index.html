@@ -208,7 +208,7 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
   <div class="timers" id="timers" aria-label="Kitchen timers"></div>
 
   <div class="stage">
-    <button class="panel l" type="button" id="libBtn">LIBRARY<br><b id="nBooks">9</b> books<br><b id="nRec">0</b> recipes<br><span class="go">Browse ›</span></button>
+    <button class="panel l" type="button" id="libBtn">LIBRARY<br><b id="nBooks">0</b> <span id="nBooksW">books</span><br><b id="nRec">0</b> recipes<br><span class="go">Browse ›</span></button>
     <button class="panel r" type="button" id="tonightBtn"></button>
     <canvas id="brain" tabindex="0" role="button" aria-label="Tap and talk to Bobbity"></canvas>
   </div>
@@ -218,7 +218,7 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
     <div class="hint" id="hint">Try “what goes with salmon?” or “set a timer for 10 minutes”</div>
     <div class="asks cats" id="asks">
       <button class="cat" type="button" data-open="flavor"><span class="ci">🌿</span><span><b>Flavor guide</b><small id="flavN">What goes with what</small></span></button>
-      <button class="cat" type="button" data-open="recipes"><span class="ci">📖</span><span><b>Recipes</b><small id="recN">Cook step by step</small></span></button>
+      <button class="cat" type="button" data-open="recipes"><span class="ci">📖</span><span><b>Recipes</b><small id="recN">Coming soon</small></span></button>
     </div>
     <form class="searchrow" id="form" autocomplete="off">
       <input id="q" type="text" enterkeyhint="go" placeholder="Or type anything you’d say…" aria-label="Type a request">
@@ -229,7 +229,6 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
   <section class="sheet" id="sheet" aria-label="Results">
     <div class="head"><h2 id="sheetTitle">Results</h2><button class="close" type="button" data-close="sheet">Close</button></div>
     <div class="list" id="list"></div>
-    <p class="note">Sample library for now. Page numbers and shelves are placeholders until her real indexes are added.</p>
   </section>
 
   <section class="sheet" id="lib" aria-label="Library">
@@ -256,10 +255,6 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
       Tap the brain (or the round button while cooking), then talk.
       <ul>
         <li><b>“What goes with mascarpone?”</b>, “what pairs with lamb”, “what goes with figs and goat cheese” (needs The Flavor Bible loaded in the Library)</li>
-        <li><b>“Short ribs”</b>, “find chicken thighs”, “what can I make with rhubarb”</li>
-        <li><b>“Open the first one”</b>, “open number two”</li>
-        <li><b>“Next step”</b>, “go back”, “repeat that”, “read the ingredients”</li>
-        <li><b>“Make it for 2, tonight and tomorrow’s lunch”</b>, “for 4 people”, “double it”, “half it”</li>
         <li><b>“Set a timer for pasta for 9 minutes”</b>, “10 minute timer”, “start the timer” (on a step with a time)</li>
         <li><b>“How much time is left?”</b>, “pause the pasta timer”, “add 2 minutes to rice”, “cancel the eggs timer”</li>
         <li><b>“Stop”</b> or “dismiss” when an alarm is ringing</li>
@@ -363,42 +358,12 @@ let toastT;function toast(m){const t=$("toast");t.textContent=m;t.classList.add(
 const store={get(k,d){try{const v=localStorage.getItem("jarvis."+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("jarvis."+k,JSON.stringify(v))}catch(e){}}};
 
 /* ================= LIBRARY (sample) ================= */
-const BOOKS={
-  foodlab:{title:"The Food Lab",shelf:"Second shelf, far right"},
-  sfah:{title:"Salt Fat Acid Heat",shelf:"Second shelf, middle"},
-  joy:{title:"Joy of Cooking",shelf:"Top shelf, left"},
-  julia:{title:"Mastering the Art of French Cooking",shelf:"Top shelf, middle"},
-  otto:{title:"Ottolenghi Simple",shelf:"Third shelf, left"},
-  dessert:{title:"Dessert Person",shelf:"Top shelf, right"},
-  six:{title:"Six Seasons",shelf:"Third shelf, middle"},
-  oma:{title:"Oma’s notebook (handwritten, German)",shelf:"Bottom shelf, in the tin"},
-  family:{title:"Family recipes binder",shelf:"Counter, by the stove"},
-};
-const RECIPES=[
-  {n:"Braised short ribs with red wine",b:"family",p:14,full:"ribs"},
-  {n:"Braised short ribs",b:"foodlab",p:612},{n:"Short rib ragù",b:"six",p:298},{n:"Bœuf bourguignon",b:"julia",p:315},
-  {n:"Crispy chicken thighs with lemon and garlic",b:"family",p:22,full:"thighs"},
-  {n:"Crisp-skinned chicken thighs",b:"foodlab",p:540},{n:"Chicken thighs with leeks",b:"otto",p:212},
-  {n:"Buttermilk-marinated roast chicken",b:"sfah",p:316},{n:"Roast chicken",b:"joy",p:410},{n:"Spatchcocked roast chicken",b:"foodlab",p:556},{n:"Poulet rôti",b:"julia",p:240},
-  {n:"Apfelkuchen (Oma’s apple cake)",b:"oma",p:12,full:"apfel"},{n:"Apple pie",b:"dessert",p:224},
-  {n:"Pasta with pork ragù",b:"foodlab",p:702},{n:"Pasta alla Norma",b:"otto",p:160},{n:"Pasta with clams",b:"sfah",p:290},{n:"Cacio e pepe",b:"foodlab",p:684},
-  {n:"Pfannkuchen",b:"oma",p:5},{n:"Sauerbraten",b:"oma",p:31},{n:"Rhubarb crumble",b:"dessert",p:180},{n:"Rhubarb and ginger compote",b:"six",p:62},
-  {n:"Pot roast",b:"joy",p:470},{n:"Buttermilk biscuits",b:"joy",p:780},{n:"Tomato and bread salad",b:"sfah",p:240},{n:"Grilled corn with chile butter",b:"six",p:180},
-  {n:"Chocolate chip cookies",b:"dessert",p:96},{n:"Roasted cauliflower with tahini",b:"otto",p:130},{n:"Gratin dauphinois",b:"julia",p:523},
-];
-const FULL={
-  ribs:{short:"Short ribs",title:"Braised short ribs with red wine",from:"Family recipes binder · page 14",serves:6,facts:["Prep 30 min","Oven 3 h","325°F"],
-    ing:[[4,"lb","bone-in beef short ribs"],[2,"tsp","kosher salt"],[2,"tbsp","oil"],[1,"","large onion, diced"],[2,"","carrots, diced"],[4,"cloves","garlic"],[2,"tbsp","tomato paste"],[2,"cups","dry red wine"],[2,"cups","beef stock"],[2,"sprigs","thyme"]],
-    steps:["Salt the ribs and let them sit while the oven heats to 325°F.","Brown the ribs in oil in a heavy pot, a few at a time. Set aside.","Pour off most of the fat. Soften the onion and carrots, about 8 minutes.","Stir in garlic and tomato paste until the paste darkens.","Add the wine and scrape up the browned bits. Reduce by half, about 10 minutes.","Return the ribs, add stock and thyme. Liquid should come about two-thirds up.","Cover and braise in the oven about 3 hours, until fork-tender.","Skim the fat and reduce the sauce on the stove if it’s thin.","Serve over mashed potatoes or polenta with the sauce spooned on top."]},
-  thighs:{short:"Chicken",title:"Crispy chicken thighs with lemon and garlic",from:"Family recipes binder · page 22",serves:4,facts:["Prep 10 min","Cook 35 min","425°F"],
-    ing:[[8,"","bone-in, skin-on chicken thighs"],[1.5,"tsp","kosher salt"],[1,"tbsp","oil"],[6,"cloves","garlic, smashed"],[1,"","lemon, sliced"],[0.5,"cup","chicken stock"]],
-    steps:["Pat the thighs very dry and salt them. Heat the oven to 425°F.","Start them skin-down in a cold cast-iron pan with the oil.","Cook over medium heat until the skin is deep golden, 12–15 minutes.","Flip, tuck garlic and lemon around them, and add the stock.","Roast until 175°F at the bone, about 20 minutes.","Rest 5 minutes and spoon the pan juices over."]},
-  apfel:{short:"Apfelkuchen",title:"Apfelkuchen (Oma’s apple cake)",from:"Oma’s notebook · page 12 · translated from German",serves:8,facts:["Prep 25 min","Bake 45 min","350°F"],
-    ing:[[125,"g","butter, soft (about ½ cup)"],[125,"g","sugar"],[2,"","eggs"],[200,"g","flour"],[2,"tsp","baking powder"],[3,"tbsp","milk"],[4,"","tart apples, peeled and quartered"],[1,"tbsp","powdered sugar"]],
-    steps:["Heat the oven to 350°F and butter a 9-inch springform pan.","Cream the butter and sugar, then beat in the eggs one at a time.","Fold in flour and baking powder with the milk until smooth.","Spread the batter in the pan.","Score the apple quarters lengthwise and press them into the batter, rounded side up.","Bake about 45 minutes, until golden and a skewer comes out clean.","Cool, then dust with powdered sugar. Best with whipped cream."]},
-};
-$("nBooks").textContent=Object.keys(BOOKS).length;$("nRec").textContent=RECIPES.length;
-const ALIASES={"apple cake":"apfelkuchen","omas apfelkuchen":"apfelkuchen","oma’s apfelkuchen":"apfelkuchen","noodles":"pasta","ribs":"short ribs"};
+// Real books only. Recipe books get added here as her cookbooks are scanned.
+const BOOKS={};
+const RECIPES=[];
+const FULL={};
+$("nBooks").textContent="0";$("nRec").textContent="0";
+const ALIASES={};
 function search(q){q=q.toLowerCase().replace(/[^a-zà-ÿœ’' ]/g," ").replace(/\s+/g," ").trim();q=ALIASES[q]||q;
   const ws=q.split(" ").filter(w=>w.length>2&&!["the","and","with","for","some","recipe","recipes","make","can","what"].includes(w)).map(w=>w.replace(/(e?s)$/,""));
   if(!ws.length)return[];
@@ -418,7 +383,7 @@ function wkey(x){return norm(x).split(" ").filter(w=>w&&!FILLER.has(w)).map(sing
 function core(t){t=t.replace(/^\*/,"").trim();const m=t.match(/^([^,:(]+), ([A-Za-zÀ-ÿ-]+)$/);if(m&&!/^(esp|e|etc|juice|zest|peel|rind|leaves|leaf)$/i.test(m[2]))return`${m[2]} ${m[1]}`;return t.split(/,|:|\(| esp\.| e\.g\./)[0].trim()}
 function indexBooks(){REF.forEach(b=>{if(b.kind!=="pairings")return;b.entries.forEach(e=>{e.key=wkey(e.n.replace(/\(.*?\)/g,""));e.full=wkey(e.n)})})}
 async function loadBooks(){try{REF=(await DB.all())||[]}catch(e){REF=[]}indexBooks();updateLibCount()}
-function updateLibCount(){$("nBooks").textContent=Object.keys(BOOKS).length+REF.length;if(window.updateCats)try{updateCats()}catch(e){}}
+function updateLibCount(){const nb=Object.keys(BOOKS).length+REF.length;$("nBooks").textContent=nb;$("nBooksW").textContent=nb===1?"book":"books";$("nRec").textContent=RECIPES.length;if(window.updateCats)try{updateCats()}catch(e){}}
 function findEntries(q,all){const k=wkey(q),out=[];if(!k)return out;const qs=k.split(" ");
   REF.forEach(b=>{if(b.kind!=="pairings")return;b.entries.forEach(e=>{let sc=0;if(e.full===k)sc=100;else if(e.key===k)sc=95;else{const es=e.key.split(" ");if(qs.every(w=>es.includes(w)))sc=60-es.length+(/in general|fresh/i.test(e.n)?5:0)+(e.pairs.length?0:-20);else if(es.every(w=>qs.includes(w))&&es.length)sc=30+es.length}
     if(sc)out.push({b,e,sc})})});
@@ -591,7 +556,7 @@ document.addEventListener("click",e=>{const c=e.target.closest("[data-close]");i
 let lastHits=[];
 function cardHTML(r,i){const b=BOOKS[r.b];return`<span class="num">${i+1}</span><span class="rname">${r.n}<span class="tag ${r.full?"full":"index"}">${r.full?"Full recipe":"In the book"}</span></span><span class="where">page<b>${r.p}</b></span><span class="book">${b.title} · ${b.shelf}</span>`}
 function showResults(title,hits){lastHits=hits;$("sheetTitle").textContent=hits.length?title:"No matches";const Lst=$("list");Lst.innerHTML="";
-  if(!hits.length)Lst.innerHTML=`<div class="empty">Nothing in the library for that yet. Every book whose index gets added becomes searchable.</div>`;
+  if(!hits.length)Lst.innerHTML=`<div class="empty">No recipes in the library yet. Try “what goes with salmon?” to use The Flavor Bible.</div>`;
   hits.forEach((r,i)=>{const c=document.createElement("button");c.type="button";c.className="card";c.innerHTML=cardHTML(r,i);c.onclick=()=>openHit(i);Lst.appendChild(c)});$("sheet").classList.add("open")}
 function openHit(i){const r=lastHits[i];if(!r)return false;if(r.full){openCook(r.full);return true}
   const b=BOOKS[r.b];setState("speaking",`Page <em>${r.p}</em> of ${b.title}.`,`${b.shelf}.`);say(`That one is on page ${r.p} of ${b.title.replace(/\(.*\)/,"")}. ${b.shelf}.`);return true}
@@ -599,7 +564,7 @@ function renderLib(){const L=$("libList");L.innerHTML="";let i=0;
   REF.forEach(b=>{const c=document.createElement("div");c.className="card";c.style.cursor="default";
     c.innerHTML=`<span class="num">${++i}</span><span class="rname">${b.title}<span class="tag full">On this device</span></span><span class="where">${b.kind==="pairings"?"entries":"recipes"}<b>${b.entries.length}</b></span><span class="book">${b.authors||""} · <button type="button" class="rm" data-rm="${b.id}">remove</button></span>`;L.appendChild(c)});
   Object.entries(BOOKS).forEach(([k,b])=>{const rs=RECIPES.filter(r=>r.b===k),full=rs.filter(r=>r.full).length,c=document.createElement("button");c.type="button";c.className="card";
-    c.innerHTML=`<span class="num">${++i}</span><span class="rname">${b.title}<span class="tag index">Sample</span></span><span class="where">recipes<b>${rs.length}</b></span><span class="book">${b.shelf}${full?` · ${full} full`:""}</span>`;
+    c.innerHTML=`<span class="num">${++i}</span><span class="rname">${b.title}<span class="tag index">Cookbook</span></span><span class="where">recipes<b>${rs.length}</b></span><span class="book">${b.shelf}${full?` · ${full} full`:""}</span>`;
     c.onclick=()=>{$("lib").classList.remove("open");showResults(b.title,rs)};L.appendChild(c)})}
 $("libList").addEventListener("click",async e=>{const r=e.target.closest("[data-rm]");if(!r)return;e.stopPropagation();const b=REF.find(x=>x.id===r.dataset.rm);
   if(b&&confirm(`Remove ${b.title} from this device? You can add the file again later.`)){await DB.del(b.id);await loadBooks();renderLib();toast(`Removed ${b.title}`)}});
@@ -704,7 +669,7 @@ async function doHandle(raw){
     let d=duration(t);if(!d&&/\bstart (the |a )?timer\b/.test(t)&&cook&&$("cook").classList.contains("open")){if(startStepTimer())return setState("speaking",`Timer started for <em>step ${cook.step+1}</em>.`,"");return respond("This step doesn’t have a time in it. Say a length, like “set a timer for 10 minutes”.")}
     if(d){let label=(t.match(/\b(?:for|on) (?:the |my )?([a-z][a-z ]*?)(?= for \d| \d|$)/)||[])[1]||(t.match(/([a-z][a-z ]*?) timer\b/)||[])[1]||"";
       label=label.replace(/\b(set|start|a|an|the|timer|minute|minutes|hour|hours|second|seconds|me|please|can you|could you|jarvis|bobbiti|bobby|tea)\b/g,"").replace(/\s+/g," ").trim();
-      if(!label||/^\d/.test(label))label="Timer";if(addTimer(cap(label),d,true)){return respond(`<em>${cap(label)}</em> timer · ${human(d)}.`,`${label==="Timer"?"Timer":cap(label)+" timer"} set for ${spoken(d)}.`)}return}
+      if(!label||/^\d/.test(label))label="Timer";if(addTimer(cap(label),d,true)){return respond(`<em>${label==="Timer"?"Timer":cap(label)+" timer"}</em> · ${human(d)}.`,`${label==="Timer"?"Timer":cap(label)+" timer"} set for ${spoken(d)}.`)}return}
     return respond("How long should the timer be?",undefined,"Try “set a timer for pasta for 9 minutes”")}
   if(/^(open |show( me)? |go to )?(the )?(flavou?r (guide|bible)|pairings)$/.test(t)){openFlavor();return respond("Here’s the flavor guide.")}
   if(/^(open |show( me)? |go to |browse )?(the |all )?(recipes|recipe list|cookbooks?)$/.test(t)){openRecipes();return respond("Here are the recipes.")}
@@ -900,7 +865,7 @@ function buildRecipe(words,seed){
   const id="made-"+Date.now().toString(36);
   const r={short:mainName.replace(/^./,c=>c.toUpperCase()),title:title.replace(/^./,c=>c.toUpperCase()),from:`Bobbity creation · pairings from ${book.title}, page${pages.length>1?"s":""} ${pages.join(", ")}`,serves:2,facts,ing,steps,made:true,why,aff:affUsed,words};
   return{id,r}}
-let made=store.get("made",{});Object.entries(made).forEach(([id,r])=>{FULL[id]=r});renderTonight();
+let made={};store.set("made",{});if(cook&&!FULL[cook.id]){cook=null;store.set("cook",null)}renderTonight();
 function saveMade(id,r){made[id]=r;const ks=Object.keys(made);if(ks.length>20)delete made[ks[0]];store.set("made",made)}
 let lastBuild=null,lastPicks=new Set();
 async function answerBuild(q,again){
@@ -928,8 +893,8 @@ function openFlavor(filter){closeLow();const bks=flavorBooks(),body=$("flavBody"
   draw(filter);$("fq").value=filter||"";$("fq").oninput=e=>draw(e.target.value);
   $("fList").onclick=e=>{const b=e.target.closest("[data-fi]");if(!b)return;const r=showEntry(all[+b.dataset.fi]);setState("speaking",`<em>${r.e.n}</em> · page ${r.e.p}`,"Say “what goes with…” any time")};
   $("flavS").scrollTop=0;$("flavS").classList.add("open")}
-function openRecipes(){closeLow();const hits=[...RECIPES].sort((a,b)=>(b.full?1:0)-(a.full?1:0)||a.n.localeCompare(b.n));showResults(`Recipes · ${hits.length}`,hits)}
-function updateCats(){const f=flavorBooks();$("flavN").textContent=f.length?`${f.reduce((n,b)=>n+b.entries.length,0)} ingredients`:"Add The Flavor Bible";$("recN").textContent=`${RECIPES.length} recipes · samples`}
+function openRecipes(){closeLow();if(!RECIPES.length){showResults("Recipes",[]);$("list").innerHTML=`<div class="empty">No recipes yet. Once her cookbooks are scanned, they show up here and Bobbity can walk you through them step by step.</div>`;return}const hits=[...RECIPES].sort((a,b)=>(b.full?1:0)-(a.full?1:0)||a.n.localeCompare(b.n));showResults(`Recipes · ${hits.length}`,hits)}
+function updateCats(){const f=flavorBooks();$("flavN").textContent=f.length?`${f.reduce((n,b)=>n+b.entries.length,0)} ingredients`:"Add The Flavor Bible";$("recN").textContent=RECIPES.length?`${RECIPES.length} recipes`:"Coming soon"}
 $("asks").addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(!b)return;unlockAudio();b.dataset.open==="flavor"?openFlavor():openRecipes()});
 
 $("form").addEventListener("submit",e=>{e.preventDefault();const v=$("q").value.trim();if(!v)return;$("q").value="";$("q").blur();unlockAudio();handle(v)});
