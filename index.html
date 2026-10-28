@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>Jarvis Kitchen</title>
+<title>Bobbity</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Jarvis">
+<meta name="apple-mobile-web-app-title" content="Bobbity">
 <meta name="theme-color" content="#121416">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,700&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
-/* Jarvis Kitchen — phone edition. Cast iron + copper + sage. Dark-only kitchen display. */
+/* Bobbity — phone edition. Cast iron + copper + sage. Dark-only kitchen display. */
 :root{
   --iron:#121416; --iron-2:#1b1e21; --iron-3:#272b2f;
   --copper:#d98a4e; --copper-hi:#f2b47e; --sage:#93b79c; --alarm:#e86a5a;
@@ -154,6 +154,26 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
 .help{font-size:14px;line-height:1.5;color:var(--ink-dim)}
 .help b{color:var(--ink)}
 .help ul{margin:6px 0 14px;padding-left:18px}
+/* pairings */
+.pfacts{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.pfacts span{font-family:var(--mono);font-size:12px;padding:4px 9px;border:1px solid var(--iron-3);border-radius:999px;color:var(--ink-dim)}
+.pfacts b{color:var(--ink);font-weight:600}
+.tier{margin:0 0 14px}
+.tier h3{margin-bottom:6px}
+.pl{display:flex;flex-wrap:wrap;gap:6px}
+.pi{font-size:15px;line-height:1.25;padding:6px 10px;border-radius:999px;border:1px solid var(--iron-3);background:var(--iron);text-align:left;cursor:default}
+.pi.go{cursor:pointer;border-color:color-mix(in srgb,var(--copper) 45%,var(--iron-3))}
+.pi.l4{background:var(--copper);border-color:var(--copper);color:var(--iron);font-weight:700}
+.pi.l3{border-color:var(--copper);color:var(--copper-hi);font-weight:700;text-transform:uppercase;font-size:13px;letter-spacing:.03em}
+.pi.l2{font-weight:700;color:var(--ink)}
+.pi.l1{color:var(--ink-dim)}
+.aff{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:15px}
+.aff li{padding:8px 12px;border-left:2px solid var(--sage);background:var(--iron);border-radius:0 8px 8px 0}
+.avoid .pi{border-color:var(--alarm);color:var(--alarm)}
+.pagebtn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:12px 14px;margin:2px 0 14px;background:var(--iron);border:1px solid var(--iron-3);border-radius:12px;text-align:left}
+.pagebtn b{font-family:var(--display);font-size:28px;color:var(--copper-hi);font-weight:500}
+.addbook{width:100%;margin-top:12px;padding:13px;border-radius:12px;border:1px dashed var(--copper);background:none;color:var(--copper-hi);font-size:15px;cursor:pointer}
+.rm{background:none;border:0;color:var(--ink-dim);font-size:12px;cursor:pointer;padding:4px;font-family:var(--mono)}
 @media (prefers-reduced-motion:reduce){.sheet,.toast{transition:none}.tm.done,.talk.live{animation:none}}
 </style>
 </head>
@@ -166,7 +186,7 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
     </div>
     <div class="sys">
       <button class="pill" type="button" id="wakeP"><span class="dot off" id="wakeDot"></span><span id="wakeTxt">Tap to keep screen on</span></button>
-      <button class="pill" type="button" id="voiceP" aria-pressed="true"><span class="dot c" id="voiceDot"></span><span id="voiceTxt">Jarvis talks</span></button>
+      <button class="pill" type="button" id="voiceP" aria-pressed="true"><span class="dot c" id="voiceDot"></span><span id="voiceTxt">Bobbity talks</span></button>
       <button class="pill" type="button" id="helpP">What can I say?</button>
     </div>
   </header>
@@ -176,7 +196,7 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
   <div class="stage">
     <button class="panel l" type="button" id="libBtn">LIBRARY<br><b id="nBooks">9</b> books<br><b id="nRec">0</b> recipes<br><span class="go">Browse ›</span></button>
     <button class="panel r" type="button" id="tonightBtn"></button>
-    <canvas id="brain" tabindex="0" role="button" aria-label="Tap and talk to Jarvis"></canvas>
+    <canvas id="brain" tabindex="0" role="button" aria-label="Tap and talk to Bobbity"></canvas>
   </div>
 
   <footer>
@@ -186,7 +206,7 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
       <button class="chip" type="button" data-q="short ribs">Short ribs</button>
       <button class="chip" type="button" data-q="chicken thighs">Chicken thighs</button>
       <button class="chip" type="button" data-q="apfelkuchen">Oma’s Apfelkuchen</button>
-      <button class="chip" type="button" data-q="pasta">Pasta</button>
+      <button class="chip" type="button" data-q="what goes with figs">What goes with figs?</button>
     </div>
     <form class="searchrow" id="form" autocomplete="off">
       <input id="q" type="text" enterkeyhint="go" placeholder="Or type anything you’d say…" aria-label="Type a request">
@@ -203,6 +223,14 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
   <section class="sheet" id="lib" aria-label="Library">
     <div class="head"><h2>Library</h2><button class="close" type="button" data-close="lib">Close</button></div>
     <div class="list" id="libList"></div>
+    <button class="addbook" type="button" id="addBook">+ Add a book file</button>
+    <input type="file" id="bookFile" accept=".json,application/json" hidden>
+    <p class="note">Book files stay on this device. They are never uploaded anywhere.</p>
+  </section>
+
+  <section class="sheet" id="pairS" aria-label="Flavor pairings">
+    <div class="head"><h2 id="pTitle">Pairings</h2><button class="close" type="button" data-close="pairS">Close</button></div>
+    <div id="pBody"></div>
   </section>
 
   <section class="sheet" id="helpS" aria-label="Voice commands">
@@ -210,6 +238,7 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
     <div class="help">
       Tap the brain (or the round button while cooking), then talk.
       <ul>
+        <li><b>“What goes with mascarpone?”</b>, “what pairs with lamb”, “what goes with figs and goat cheese” (needs The Flavor Bible loaded in the Library)</li>
         <li><b>“Short ribs”</b>, “find chicken thighs”, “what can I make with rhubarb”</li>
         <li><b>“Open the first one”</b>, “open number two”</li>
         <li><b>“Next step”</b>, “go back”, “repeat that”, “read the ingredients”</li>
@@ -258,7 +287,7 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
     </div>
   </section>
 
-  <button class="talk" id="talk" type="button" aria-label="Talk to Jarvis">Talk</button>
+  <button class="talk" id="talk" type="button" aria-label="Talk to Bobbity">Talk</button>
   <div class="scrim" id="scrim"></div>
 
   <section class="sheet top" id="tsheet" aria-label="Timer">
@@ -360,6 +389,71 @@ function search(q){q=q.toLowerCase().replace(/[^a-zà-ÿœ’' ]/g," ").replace(
   if(!hits.length)hits=RECIPES.filter(r=>{const t=r.n.toLowerCase();return ws.some(w=>w.length>3&&t.includes(w))});
   return hits.sort((a,b)=>(b.full?1:0)-(a.full?1:0));}
 
+/* ================= BOOK FILES (kept on this device) ================= */
+const DB={db:null,async open(){if(this.db)return this.db;return this.db=await new Promise((res,rej)=>{const r=indexedDB.open("bobbiti",1);r.onupgradeneeded=()=>r.result.createObjectStore("books",{keyPath:"id"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
+  async tx(mode,fn){const db=await this.open();return new Promise((res,rej)=>{const t=db.transaction("books",mode),st=t.objectStore("books"),r=fn(st);t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error)})},
+  all(){return this.tx("readonly",st=>st.getAll())},put(b){return this.tx("readwrite",st=>st.put(b))},del(id){return this.tx("readwrite",st=>st.delete(id))}};
+let REF=[];
+function norm(x){return(x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/&/g," and ").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim()}
+function sing(w){if(w.length<4||/ss$|us$|is$/.test(w))return w;if(/ies$/.test(w))return w.slice(0,-3)+"y";if(/(oes|shes|ches|xes)$/.test(w))return w.slice(0,-2);if(/s$/.test(w))return w.slice(0,-1);return w}
+const FILLER=new Set(["the","a","an","of","and","with","some","esp","e","g","eg","good","well","nicely","in","general","aka"]);
+function wkey(x){return norm(x).split(" ").filter(w=>w&&!FILLER.has(w)).map(sing).sort().join(" ")}
+function core(t){t=t.replace(/^\*/,"").trim();const m=t.match(/^([^,:(]+), ([A-Za-zÀ-ÿ-]+)$/);if(m&&!/^(esp|e|etc)$/i.test(m[2]))return`${m[2]} ${m[1]}`;return t.split(/,|:|\(| esp\.| e\.g\./)[0].trim()}
+function indexBooks(){REF.forEach(b=>{if(b.kind!=="pairings")return;b.entries.forEach(e=>{e.key=wkey(e.n.replace(/\(.*?\)/g,""));e.full=wkey(e.n)})})}
+async function loadBooks(){try{REF=(await DB.all())||[]}catch(e){REF=[]}indexBooks();updateLibCount()}
+function updateLibCount(){$("nBooks").textContent=Object.keys(BOOKS).length+REF.length}
+function findEntries(q,all){const k=wkey(q),out=[];if(!k)return out;const qs=k.split(" ");
+  REF.forEach(b=>{if(b.kind!=="pairings")return;b.entries.forEach(e=>{let sc=0;if(e.full===k)sc=100;else if(e.key===k)sc=95;else{const es=e.key.split(" ");if(qs.every(w=>es.includes(w)))sc=60-es.length+(/in general|fresh/i.test(e.n)?5:0)+(e.pairs.length?0:-20);else if(es.every(w=>qs.includes(w))&&es.length)sc=30+es.length}
+    if(sc)out.push({b,e,sc})})});
+  out.sort((x,y)=>y.sc-x.sc);if(all)return out;const top=out.filter(o=>o.sc>=95&&(o.e.pairs.length||o.e.see));return top.length?top:out}
+function follow(hit){let {b,e}=hit,n=0;while(!e.pairs.length&&/\bsee\b/i.test(e.see||"")&&n++<2){const tgt=(e.see.match(/see(?: also)? ([^)]+)/i)||[])[1];if(!tgt)break;const f=findEntries(tgt.split(/ and |;/)[0].replace(/,/g," "),true).filter(o=>o.e!==e&&(o.e.pairs.length||o.e.aff.length));if(!f.length)break;e=f[0].e;b=f[0].b}return{b,e}}
+const TIERS=[[4,"Holy grail"],[3,"Very highly recommended"],[2,"Often recommended"],[1,"Also works"]];
+function sname(n){n=n.replace(/\(.*?\)/g,"").replace(/\s*—\s*in general/i,"").replace(/\s*\/\s*/g," and ").trim();const m=n.match(/^([^,—]+), ([^,—]+?)(?:\s*—\s*(.+))?$/);
+  return(m?`${m[3]?m[3]+" ":""}${m[2]} ${m[1]}`:n.replace(/\s*—\s*/g," ")).replace(/\s+/g," ").trim().toLowerCase()}
+function spokenList(a){a=[...new Set(a)];return a.length<2?(a[0]||""):a.slice(0,-1).join(", ")+" and "+a.at(-1)}
+let lastPair=null;
+function pairHTML(items,cls){return items.map(p=>{const go=findEntries(core(p.t)).some(o=>o.sc>=95);return`<button type="button" class="pi l${p.l}${go?" go":""}" ${go?`data-pair="${core(p.t).replace(/"/g,"")}"`:"tabindex=-1"}>${p.t}</button>`}).join("")}
+function showEntry(hit){const {b,e}=follow(hit);lastPair={b,e,spoken:0};closeLow();$("pTitle").textContent=e.n;
+  const props=Object.entries(e.props||{}).map(([k,v])=>`<span>${k} <b>${v}</b></span>`).join("");
+  let h=`<button type="button" class="pagebtn" id="pPage"><span>${b.title}${b.shelf?`<br><span class="book">${b.shelf}</span>`:""}</span><span style="text-align:right"><span class="book">page</span><br><b>${e.p}</b></span></button>`;
+  if(props)h+=`<div class="pfacts">${props}</div>`;
+  if(e.see)h+=`<p class="note" style="margin:0 0 12px">${e.see}</p>`;
+  TIERS.forEach(([l,name])=>{const it=e.pairs.filter(p=>p.l===l);if(it.length)h+=`<div class="tier"><h3>${name}<span>${it.length}</span></h3><div class="pl">${pairHTML(it)}</div></div>`});
+  if(e.aff&&e.aff.length)h+=`<div class="tier"><h3>Flavor combos</h3><ul class="aff">${e.aff.map(a=>`<li>${a}</li>`).join("")}</ul></div>`;
+  if(e.avoid&&e.avoid.length)h+=`<div class="tier avoid"><h3>Avoid</h3><div class="pl">${e.avoid.map(a=>`<span class="pi">${a}</span>`).join("")}</div></div>`;
+  if(!e.pairs.length&&!e.aff.length)h+=`<div class="empty">No pairing list on this page. Check the book.</div>`;
+  $("pBody").innerHTML=h;$("pairS").scrollTop=0;$("pairS").classList.add("open");
+  $("pPage").onclick=()=>say(`${e.n} is on page ${e.p} of ${b.title}.`);return{b,e}}
+function topPairs(e,from){const order=[...e.pairs].sort((x,y)=>y.l-x.l);const names=[];for(const p of order){const c=core(p.t).toLowerCase();if(c&&!names.includes(c))names.push(c)}return names.slice(from||0)}
+function affSpeech(a){const parts=a.split("+").map(x=>x.trim().split(/,| esp\./)[0]);return parts.length>1?parts[0]+" with "+spokenList(parts.slice(1)):a}
+$("pBody").addEventListener("click",e=>{const b=e.target.closest("[data-pair]");if(!b)return;const f=findEntries(b.dataset.pair);if(f.length){const r=showEntry(f[0]);setState("speaking",`<em>${r.e.n}</em> · page ${r.e.p}`,"");}});
+async function answerPairs(q){
+  q=q.replace(/\b(in|from) (the )?flavou?r bible\b/," ").replace(/\b(please|tonight|for dinner|for dessert)\b/g," ").replace(/^(a|an|some|the|my)\s+/,"").replace(/\s+/g," ").trim().replace(/\?$/,"");
+  if(!REF.some(b=>b.kind==="pairings"))return respond("I need The Flavor Bible first. Add its book file in the Library.","I don't have The Flavor Bible loaded yet. Open the library and add its book file.","Library → Add a book file");
+  const parts=q.split(/ and | & |, | plus /).map(x=>x.trim()).filter(Boolean);
+  if(parts.length>1){const hits=parts.map(p=>findEntries(p)[0]).filter(Boolean).map(follow);
+    if(hits.length>=2){const keyset=h=>new Set(h.e.pairs.map(p=>wkey(core(p.t))));const sets=hits.slice(1).map(keyset);
+      const both=[...new Set([...hits[0].e.pairs].sort((x,y)=>y.l-x.l).map(p=>core(p.t).toLowerCase()))].filter(c=>sets.every(st=>st.has(wkey(c))));
+      const names=hits.map(h=>sname(h.e.n).toLowerCase());showEntry({b:hits[0].b,e:hits[0].e});
+      if(!both.length)return respond(`Nothing shared between <em>${spokenList(names)}</em>.`,`I didn't find anything that pairs with both ${spokenList(names)}. Here's ${names[0]}.`);
+      return respond(`Goes with <em>${spokenList(names)}</em>: ${both.slice(0,8).join(", ")}.`,`Things that go with both ${spokenList(names)}: ${spokenList(both.slice(0,8))}.`,"Showing "+hits[0].e.n)}}
+  const f=findEntries(q);
+  if(!f.length)return respond(`No Flavor Bible entry for <em>${q}</em>.`,`I couldn't find ${q} in The Flavor Bible.`,"Try a single ingredient, like “lamb” or “figs”");
+  const {b,e}=showEntry(f[0]),tops=topPairs(e).slice(0,8),best=e.pairs.filter(p=>p.l>=3).map(p=>core(p.t).toLowerCase());
+  const sn=sname(e.n),c1=x=>x.charAt(0).toUpperCase()+x.slice(1);const lead=best.length?`${c1(sn)} ${/s$/.test(sn)?"are":"is"} best with ${spokenList([...new Set(best)].slice(0,6))}.`:`${c1(sn)} ${/s$/.test(sn)?"go":"goes"} with ${spokenList(tops.slice(0,6))}.`;
+  const also=best.length&&best.length<6?` Also good: ${spokenList(tops.filter(x=>!best.includes(x)).slice(0,6-Math.min(best.length,6)+2))}.`:"";
+  const combo=e.aff&&e.aff.length?` A classic combo: ${affSpeech(e.aff[0])}.`:"";
+  lastPair.spoken=8;
+  return respond(`<em>${e.n}</em> · ${tops.slice(0,5).join(", ")}…`,`${lead}${also}${combo} It's on page ${e.p}. Say "more" for more.`,`${e.pairs.length} pairings · page ${e.p}${f.length>1?` · also: ${f.slice(1,3).map(o=>o.e.n).join(", ")}`:""}`)}
+function morePairs(){if(!lastPair)return false;const rest=topPairs(lastPair.e,lastPair.spoken);if(!rest.length){respond("That's the whole list.");return true}
+  const chunk=rest.slice(0,10);lastPair.spoken+=10;respond(`More: ${chunk.join(", ")}.`,`${spokenList(chunk)}.${rest.length>10?" Say more to keep going.":" That's all of them."}`);return true}
+/* library sheet: loaded book files + sample shelf */
+$("addBook").onclick=()=>$("bookFile").click();
+$("bookFile").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{const b=JSON.parse(await f.text());if(b.format!=="bobbity-book"||!b.id||!Array.isArray(b.entries))throw new Error("not a book file");
+    await DB.put(b);await loadBooks();toast(`📖 Added ${b.title}`);say(`Added ${b.title}. ${b.entries.length} entries.`);renderLib()}
+  catch(err){toast("That file isn’t a Bobbity book file");}};
+
 /* ================= CLOCK ================= */
 function tick(){const d=new Date();$("clock").textContent=d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}).replace(/\s?[AP]M/i,"");
   $("date").textContent=d.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"})}
@@ -378,12 +472,12 @@ if(window.speechSynthesis){pickVoice();speechSynthesis.onvoiceschanged=pickVoice
 function say(text){if(!talkBack||!window.speechSynthesis)return Promise.resolve();return new Promise(res=>{try{speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text.replace(/<[^>]+>/g,"").replace(/°F/g," degrees").replace(/½/g," and a half").replace(/–/g," to "));
   if(voicePick)u.voice=voicePick;u.rate=1.02;u.onend=u.onerror=()=>res();speechSynthesis.speak(u);setTimeout(res,12000)}catch(e){res()}})}
-function setTalk(v){talkBack=v;store.set("talk",v);$("voiceTxt").textContent=v?"Jarvis talks":"Jarvis is quiet";$("voiceDot").className="dot"+(v?" c":" off");$("voiceP").setAttribute("aria-pressed",v)}
-setTalk(talkBack);$("voiceP").onclick=()=>{setTalk(!talkBack);toast(talkBack?"Jarvis will talk back":"Jarvis will stay quiet (alarms still beep)")};
+function setTalk(v){talkBack=v;store.set("talk",v);$("voiceTxt").textContent=v?"Bobbity talks":"Bobbity is quiet";$("voiceDot").className="dot"+(v?" c":" off");$("voiceP").setAttribute("aria-pressed",v)}
+setTalk(talkBack);$("voiceP").onclick=()=>{setTalk(!talkBack);toast(talkBack?"Bobbity will talk back":"Bobbity will stay quiet (alarms still beep)")};
 async function requestWake(){wakeWanted=true;if(!("wakeLock" in navigator)){$("wakeTxt").textContent="Screen lock: set in Settings";return}
   try{wakeLock=await navigator.wakeLock.request("screen");$("wakeTxt").textContent="Screen stays on";$("wakeDot").className="dot";wakeLock.addEventListener("release",()=>{$("wakeTxt").textContent="Tap to keep screen on";$("wakeDot").className="dot off"})}
   catch(e){$("wakeTxt").textContent="Tap to keep screen on"}}
-$("wakeP").onclick=()=>requestWake().then(()=>toast(wakeLock?"Screen will stay on while Jarvis is open":"This browser can’t keep the screen on. Set Auto-Lock to Never while cooking."));
+$("wakeP").onclick=()=>requestWake().then(()=>toast(wakeLock?"Screen will stay on while Bobbity is open":"This browser can’t keep the screen on. Set Auto-Lock to Never while cooking."));
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){if(wakeWanted)requestWake();tickTimers()}});
 
 /* ================= TIMERS (timestamp-based, saved) ================= */
@@ -474,7 +568,7 @@ build();addEventListener("resize",()=>{build();placeCook()});requestAnimationFra
 let busy=false;
 function setState(s,status,hint){state=s;$("status").innerHTML=status;$("jsay").innerHTML=s==="idle"?"":status;if(hint!==undefined)$("hint").textContent=hint;$("talk").classList.toggle("live",s==="listening")}
 function idle(h){setState("idle","Tap the brain and talk",h===undefined?"":h)}
-function closeLow(){["sheet","lib","helpS"].forEach(i=>$(i).classList.remove("open"))}
+function closeLow(){["sheet","lib","helpS","pairS"].forEach(i=>$(i).classList.remove("open"))}
 document.addEventListener("click",e=>{const c=e.target.closest("[data-close]");if(!c)return;$(c.dataset.close).classList.remove("open");if(c.dataset.close==="cook")closeCook()});
 let lastHits=[];
 function cardHTML(r,i){const b=BOOKS[r.b];return`<span class="num">${i+1}</span><span class="rname">${r.n}<span class="tag ${r.full?"full":"index"}">${r.full?"Full recipe":"In the book"}</span></span><span class="where">page<b>${r.p}</b></span><span class="book">${b.title} · ${b.shelf}</span>`}
@@ -483,10 +577,16 @@ function showResults(title,hits){lastHits=hits;$("sheetTitle").textContent=hits.
   hits.forEach((r,i)=>{const c=document.createElement("button");c.type="button";c.className="card";c.innerHTML=cardHTML(r,i);c.onclick=()=>openHit(i);Lst.appendChild(c)});$("sheet").classList.add("open")}
 function openHit(i){const r=lastHits[i];if(!r)return false;if(r.full){openCook(r.full);return true}
   const b=BOOKS[r.b];setState("speaking",`Page <em>${r.p}</em> of ${b.title}.`,`${b.shelf}.`);say(`That one is on page ${r.p} of ${b.title.replace(/\(.*\)/,"")}. ${b.shelf}.`);return true}
-$("libBtn").onclick=()=>{closeLow();const L=$("libList");L.innerHTML="";
-  Object.entries(BOOKS).forEach(([k,b],i)=>{const rs=RECIPES.filter(r=>r.b===k),full=rs.filter(r=>r.full).length,c=document.createElement("button");c.type="button";c.className="card";
-    c.innerHTML=`<span class="num">${i+1}</span><span class="rname">${b.title}</span><span class="where">recipes<b>${rs.length}</b></span><span class="book">${b.shelf}${full?` · ${full} full`:""}</span>`;
-    c.onclick=()=>{$("lib").classList.remove("open");showResults(b.title,rs)};L.appendChild(c)});$("lib").classList.add("open")};
+function renderLib(){const L=$("libList");L.innerHTML="";let i=0;
+  REF.forEach(b=>{const c=document.createElement("div");c.className="card";c.style.cursor="default";
+    c.innerHTML=`<span class="num">${++i}</span><span class="rname">${b.title}<span class="tag full">On this device</span></span><span class="where">${b.kind==="pairings"?"entries":"recipes"}<b>${b.entries.length}</b></span><span class="book">${b.authors||""} · <button type="button" class="rm" data-rm="${b.id}">remove</button></span>`;L.appendChild(c)});
+  Object.entries(BOOKS).forEach(([k,b])=>{const rs=RECIPES.filter(r=>r.b===k),full=rs.filter(r=>r.full).length,c=document.createElement("button");c.type="button";c.className="card";
+    c.innerHTML=`<span class="num">${++i}</span><span class="rname">${b.title}<span class="tag index">Sample</span></span><span class="where">recipes<b>${rs.length}</b></span><span class="book">${b.shelf}${full?` · ${full} full`:""}</span>`;
+    c.onclick=()=>{$("lib").classList.remove("open");showResults(b.title,rs)};L.appendChild(c)})}
+$("libList").addEventListener("click",async e=>{const r=e.target.closest("[data-rm]");if(!r)return;e.stopPropagation();const b=REF.find(x=>x.id===r.dataset.rm);
+  if(b&&confirm(`Remove ${b.title} from this device? You can add the file again later.`)){await DB.del(b.id);await loadBooks();renderLib();toast(`Removed ${b.title}`)}});
+$("libBtn").onclick=()=>{closeLow();renderLib();$("lib").classList.add("open")};
+loadBooks();
 $("helpP").onclick=()=>{closeLow();$("helpS").classList.add("open")};
 
 /* ================= COOK VIEW (saved) ================= */
@@ -553,6 +653,7 @@ cv.addEventListener("click",listen);cv.addEventListener("keydown",e=>{if(e.key==
 
 /* ================= COMMAND PARSER ================= */
 const NUMW={zero:0,one:1,a:1,an:1,two:2,to:2,too:2,three:3,four:4,for:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,ninety:90};
+const NAME_RE=/^ (hey |ok |okay |hi |yo )?(bobbiti|bobbity|bobbitty|bobiti|bobity|bobbie?t(ee|y|i)|bobb?(y|ie|i|ee) ?(t|tea|tee|ti|tie|ty|d|de|dee)|bob it(e|ee|y)|baby tea|jarvis)( |$)/;
 function wordsToNums(s){return s.replace(/\b(twenty|thirty|forty|fifty)[ -](one|two|three|four|five|six|seven|eight|nine)\b/g,(m,a,b)=>String(NUMW[a]+NUMW[b]))
   .replace(/\b(zero|one|two|three|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|ninety)\b(?=\s*(seconds?|secs?|minutes?|mins?|hours?|hrs?|people|persons?|of us|servings?|portions?|minute|hour|second|$))/g,m=>String(NUMW[m]))
   .replace(/\b(an?|one)\s+(hour|minute)\b/g,"1 $2")}
@@ -565,7 +666,7 @@ async function respond(html,speech,hint){setState("speaking",html,hint===undefin
 async function handle(raw){busy=true;try{await doHandle(raw)}finally{busy=false}}
 async function doHandle(raw){
   let s=" "+raw.toLowerCase().replace(/[.,!?]/g," ").replace(/’/g,"'").replace(/\s+/g," ")+" ";
-  s=s.replace(/^ (hey |ok |okay |hi )?jarvis /," ");s=wordsToNums(s).replace(/\s+/g," ");const t=s.trim();
+  s=s.replace(NAME_RE," ");s=wordsToNums(s).replace(/\s+/g," ");const t=s.trim();
   setState("thinking",`<em>“${raw.trim()}”</em>`,"");await wait(reduce?0:250);
   const done=timers.filter(x=>left(x)<=0);
   // alarms
@@ -584,9 +685,15 @@ async function doHandle(raw){
       const txt=(tm&&findTimer(t)?[tm]:live).map(x=>`${x.label}: ${spoken(left(x))}${x.run?"":" (paused)"}`);return respond(txt.join("<br>"),txt.join(". ")+".")}
     let d=duration(t);if(!d&&/\bstart (the |a )?timer\b/.test(t)&&cook&&$("cook").classList.contains("open")){if(startStepTimer())return setState("speaking",`Timer started for <em>step ${cook.step+1}</em>.`,"");return respond("This step doesn’t have a time in it. Say a length, like “set a timer for 10 minutes”.")}
     if(d){let label=(t.match(/\b(?:for|on) (?:the |my )?([a-z][a-z ]*?)(?= for \d| \d|$)/)||[])[1]||(t.match(/([a-z][a-z ]*?) timer\b/)||[])[1]||"";
-      label=label.replace(/\b(set|start|a|an|the|timer|minute|minutes|hour|hours|second|seconds|me|please|can you|could you|jarvis)\b/g,"").replace(/\s+/g," ").trim();
+      label=label.replace(/\b(set|start|a|an|the|timer|minute|minutes|hour|hours|second|seconds|me|please|can you|could you|jarvis|bobbiti|bobby|tea)\b/g,"").replace(/\s+/g," ").trim();
       if(!label||/^\d/.test(label))label="Timer";if(addTimer(cap(label),d,true)){return respond(`<em>${cap(label)}</em> timer · ${human(d)}.`,`${cap(label)} timer set for ${spoken(d)}.`)}return}
     return respond("How long should the timer be?",undefined,"Try “set a timer for pasta for 9 minutes”")}
+  // flavor pairings
+  const pm=t.match(/^(?:so |and |ok |okay |hey )?(?:what|which|whats|what's)(?: else| kind of \w+| things?| flavou?rs?| ingredients?| foods?)? (?:goes?|go|pairs?|works?|tastes? good|is good|are good|would go|should i (?:pair|serve|put|use|add)|can i (?:pair|serve|put|use|add)|do i (?:pair|serve)|to (?:pair|serve)) (?:well |good |great |nicely |best )?(?:with|alongside|together with) (.+)$/)
+    ||t.match(/^(?:what are |show me |give me |find |look up )?(?:the )?(?:pairings?|flavou?r pairings?|flavou?r ideas?|matches|flavou?r bible) (?:for|with|on) (.+)$/)
+    ||t.match(/^(?:what )?pairs? (?:well )?with (.+)$/);
+  if(pm)return answerPairs(pm[1]);
+  if(lastPair&&$("pairS").classList.contains("open")&&/^(more|tell me more|keep going|what else|and|go on|continue)$/.test(t)){morePairs();return}
   // cook view commands
   const cooking=cook&&$("cook").classList.contains("open");
   if(cooking){
@@ -633,6 +740,7 @@ async function doHandle(raw){
 /* typed commands go through the same parser */
 $("asks").addEventListener("click",e=>{const b=e.target.closest(".chip");if(b){unlockAudio();handle(b.dataset.q)}});
 $("form").addEventListener("submit",e=>{e.preventDefault();const v=$("q").value.trim();if(!v)return;$("q").value="";$("q").blur();unlockAudio();handle(v)});
+if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
 if(!SR)$("hint").textContent="Voice isn’t available in this browser. Type below instead.";
 </script>
 </body>

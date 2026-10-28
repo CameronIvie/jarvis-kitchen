@@ -1,6 +1,6 @@
 {
-  "name": "Jarvis Kitchen",
-  "short_name": "Jarvis",
+  "name": "Bobbity",
+  "short_name": "Bobbity",
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
