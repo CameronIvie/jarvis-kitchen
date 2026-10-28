@@ -255,6 +255,7 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
     <div class="help">
       Tap the brain (or the round button while cooking), then talk.
       <ul>
+        <li><b>“Build me a recipe with salmon”</b>, “create something with pork and apples”, then “another one” for a new idea</li>
         <li><b>“What goes with mascarpone?”</b>, “what pairs with lamb”, “what goes with figs and goat cheese” (needs The Flavor Bible loaded in the Library)</li>
         <li><b>“Short ribs”</b>, “find chicken thighs”, “what can I make with rhubarb”</li>
         <li><b>“Open the first one”</b>, “open number two”</li>
@@ -415,7 +416,7 @@ function norm(x){return(x||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g
 function sing(w){if(w.length<4||/ss$|us$|is$/.test(w))return w;if(/ies$/.test(w))return w.slice(0,-3)+"y";if(/(oes|shes|ches|xes)$/.test(w))return w.slice(0,-2);if(/s$/.test(w))return w.slice(0,-1);return w}
 const FILLER=new Set(["the","a","an","of","and","with","some","esp","e","g","eg","good","well","nicely","in","general","aka"]);
 function wkey(x){return norm(x).split(" ").filter(w=>w&&!FILLER.has(w)).map(sing).sort().join(" ")}
-function core(t){t=t.replace(/^\*/,"").trim();const m=t.match(/^([^,:(]+), ([A-Za-zÀ-ÿ-]+)$/);if(m&&!/^(esp|e|etc)$/i.test(m[2]))return`${m[2]} ${m[1]}`;return t.split(/,|:|\(| esp\.| e\.g\./)[0].trim()}
+function core(t){t=t.replace(/^\*/,"").trim();const m=t.match(/^([^,:(]+), ([A-Za-zÀ-ÿ-]+)$/);if(m&&!/^(esp|e|etc|juice|zest|peel|rind|leaves|leaf)$/i.test(m[2]))return`${m[2]} ${m[1]}`;return t.split(/,|:|\(| esp\.| e\.g\./)[0].trim()}
 function indexBooks(){REF.forEach(b=>{if(b.kind!=="pairings")return;b.entries.forEach(e=>{e.key=wkey(e.n.replace(/\(.*?\)/g,""));e.full=wkey(e.n)})})}
 async function loadBooks(){try{REF=(await DB.all())||[]}catch(e){REF=[]}indexBooks();updateLibCount()}
 function updateLibCount(){$("nBooks").textContent=Object.keys(BOOKS).length+REF.length;if(window.updateCats)try{updateCats()}catch(e){}}
@@ -439,7 +440,8 @@ function showEntry(hit){const {b,e}=follow(hit);lastPair={b,e,spoken:0};closeLow
   if(e.aff&&e.aff.length)h+=`<div class="tier"><h3>Flavor combos</h3><ul class="aff">${e.aff.map(a=>`<li>${a}</li>`).join("")}</ul></div>`;
   if(e.avoid&&e.avoid.length)h+=`<div class="tier avoid"><h3>Avoid</h3><div class="pl">${e.avoid.map(a=>`<span class="pi">${a}</span>`).join("")}</div></div>`;
   if(!e.pairs.length&&!e.aff.length)h+=`<div class="empty">No pairing list on this page. Check the book.</div>`;
-  $("pBody").innerHTML=h;$("pairS").scrollTop=0;$("pairS").classList.add("open");
+  h=`<button type="button" class="addbook" id="pBuild" style="margin:0 0 14px">🍳 Build a recipe with ${e.n.replace(/\s*—\s*in general/i,"")}</button>`+h;
+  $("pBody").innerHTML=h;$("pBuild").onclick=()=>{unlockAudio();answerBuild(sname(e.n))};$("pairS").scrollTop=0;$("pairS").classList.add("open");
   $("pPage").onclick=()=>say(`${e.n} is on page ${e.p} of ${b.title}.`);return{b,e}}
 function topPairs(e,from){const order=[...e.pairs].sort((x,y)=>y.l-x.l);const names=[];for(const p of order){const c=core(p.t).toLowerCase();if(c&&!names.includes(c))names.push(c)}return names.slice(from||0)}
 function affSpeech(a){const parts=a.split("+").map(x=>x.trim().split(/,| esp\./)[0]);return parts.length>1?parts[0]+" with "+spokenList(parts.slice(1)):a}
@@ -620,7 +622,7 @@ function stepTime(s){let m=s.match(/(\d+)(?:–\d+)?\s*(hours?|minutes?)/i);if(!
 function placeCook(){const t=$("timers").getBoundingClientRect();document.documentElement.style.setProperty("--cooktop",(t.bottom+8)+"px")}
 function renderCook(flash){const r=FULL[cook.id],meals=new Set(cook.meals),servings=cook.people*meals.size;mult=servings/r.serves;
   $("ctitle").textContent=r.title;$("cfrom").textContent=r.from;
-  $("cfacts").innerHTML=r.facts.map(f=>`<span>${f}</span>`).join("")+`<span>Makes <b>${servings}</b> · book serves ${r.serves}</span>`;
+  $("cfacts").innerHTML=r.facts.map(f=>`<span>${f}</span>`).join("")+`<span>Makes <b>${servings}</b> · ${r.made?"recipe":"book"} serves ${r.serves}</span>`;
   $("people").textContent=cook.people;document.querySelectorAll("#plan [data-meal]").forEach(b=>b.setAttribute("aria-pressed",String(meals.has(b.dataset.meal))));
   const list=[...meals].map(m=>MEAL_NAMES[m]);
   $("ptotal").innerHTML=`${cook.people} ${cook.people===1?"person":"people"} × ${meals.size} ${meals.size===1?"meal":"meals"} = <b>${servings} servings</b> <span style="color:var(--ink-dim)">(${Math.round(mult*100)/100}× the recipe)</span>`;
@@ -632,11 +634,11 @@ function renderCook(flash){const r=FULL[cook.id],meals=new Set(cook.meals),servi
   $("csteps").innerHTML=r.steps.map((s,i)=>{const tt=stepTime(s);return`<button type="button" class="step${i===cook.step?" on":i<cook.step?" past":""}" data-step="${i}"><b>STEP ${i+1} OF ${r.steps.length}</b>${s}${i===cook.step&&tt?`<span class="stimer" data-t="${tt}">⏱ Start ${human(tt)} timer</span>`:""}</button>`}).join("");
   const on=$("csteps").querySelector(".step.on"),ck=$("cook");if(on&&cook.step!==scrolledStep&&ck.classList.contains("open")){scrolledStep=cook.step;ck.scrollTo({top:Math.max(0,on.offsetTop-ck.clientHeight*.35),behavior:reduce?"auto":"smooth"})}
   saveCook();return list.length>1?list.slice(0,-1).join(", ")+" and "+list.at(-1):list[0]}
-function openCook(id,resume){placeCook();let planned=null;if(!(resume&&cook&&cook.id===id)){cook={id,step:0,people:2,meals:["tonight"],got:[]};got=new Set();if(pendingPlan){planned=pendingPlan;cook.people=planned.people||2;cook.meals=planned.meals||["tonight"]}}pendingPlan=null;
+function openCook(id,resume,quiet){placeCook();let planned=null;if(!(resume&&cook&&cook.id===id)){cook={id,step:0,people:2,meals:["tonight"],got:[]};got=new Set();if(pendingPlan){planned=pendingPlan;cook.people=planned.people||2;cook.meals=planned.meals||["tonight"]}}pendingPlan=null;
   closeLow();$("cook").scrollTop=0;scrolledStep=resume&&cook.step>0?-1:cook.step;$("cook").classList.add("open");$("talk").classList.add("show");renderCook();
   const r=FULL[id],serv=cook.people*cook.meals.length;const msg=resume?`Picking up at step ${cook.step+1}.`:`Opening ${r.title}.`;
   setState("speaking",resume?`Picking up at <em>step ${cook.step+1}</em>.`:planned?`Scaled to <em>${serv} servings</em>.`:`Opening <em>${r.title}</em>.`,"");
-  say(resume?`${msg} ${r.steps[cook.step]}`:planned?`${msg} I scaled it to ${serv} servings, that is ${Math.round(mult*100)/100} times the recipe.${cook.meals.length>1?` Pack ${cook.people*(cook.meals.length-1)} portions before serving.`:""}`:`${msg} It serves ${r.serves} as written. Tell me how many people, or say next step.`)}
+  if(!quiet)say(resume?`${msg} ${r.steps[cook.step]}`:planned?`${msg} I scaled it to ${serv} servings, that is ${Math.round(mult*100)/100} times the recipe.${cook.meals.length>1?` Pack ${cook.people*(cook.meals.length-1)} portions before serving.`:""}`:`${msg} It serves ${r.serves} as written. Tell me how many people, or say next step.`)}
 function closeCook(){$("cook").classList.remove("open");$("talk").classList.remove("show");idle("")}
 function go(d,silent){if(!cook)return false;const r=FULL[cook.id],n=cook.step+d;if(n<0||n>=r.steps.length){say(n<0?"That’s the first step.":"That was the last step. Enjoy!");return false}
   cook.step=n;renderCook();setState("speaking",`<em>Step ${n+1}.</em> ${r.steps[n]}`,"");if(!silent)say(`Step ${n+1}. ${r.steps[n]}`);return true}
@@ -703,10 +705,16 @@ async function doHandle(raw){
     let d=duration(t);if(!d&&/\bstart (the |a )?timer\b/.test(t)&&cook&&$("cook").classList.contains("open")){if(startStepTimer())return setState("speaking",`Timer started for <em>step ${cook.step+1}</em>.`,"");return respond("This step doesn’t have a time in it. Say a length, like “set a timer for 10 minutes”.")}
     if(d){let label=(t.match(/\b(?:for|on) (?:the |my )?([a-z][a-z ]*?)(?= for \d| \d|$)/)||[])[1]||(t.match(/([a-z][a-z ]*?) timer\b/)||[])[1]||"";
       label=label.replace(/\b(set|start|a|an|the|timer|minute|minutes|hour|hours|second|seconds|me|please|can you|could you|jarvis|bobbiti|bobby|tea)\b/g,"").replace(/\s+/g," ").trim();
-      if(!label||/^\d/.test(label))label="Timer";if(addTimer(cap(label),d,true)){return respond(`<em>${cap(label)}</em> timer · ${human(d)}.`,`${cap(label)} timer set for ${spoken(d)}.`)}return}
+      if(!label||/^\d/.test(label))label="Timer";if(addTimer(cap(label),d,true)){return respond(`<em>${cap(label)}</em> timer · ${human(d)}.`,`${label==="Timer"?"Timer":cap(label)+" timer"} set for ${spoken(d)}.`)}return}
     return respond("How long should the timer be?",undefined,"Try “set a timer for pasta for 9 minutes”")}
   if(/^(open |show( me)? |go to )?(the )?(flavou?r (guide|bible)|pairings)$/.test(t)){openFlavor();return respond("Here’s the flavor guide.")}
   if(/^(open |show( me)? |go to |browse )?(the |all )?(recipes|recipe list|cookbooks?)$/.test(t)){openRecipes();return respond("Here are the recipes.")}
+  // recipe builder
+  if(lastBuild&&/^(another( (one|1))?|try again|something else|give me another( (one|1))?|different (one|1)|(one|1) more|not that (one|1)|next idea)$/.test(t))return answerBuild(lastBuild.join(" and "),true);
+  const bm=t.match(/^(?:can you |could you |please |let's )?(?:build|create|invent|design|make up|come up with|dream up|make|give|cook up|whip up)(?: me| us)? (?:a |an |some )?(?:new |simple |quick |easy |good )?(?:recipe|dish|meal|something|dinner|lunch|idea)s? (?:with|using|around|for|from|featuring|that uses|out of) (.+)$/)
+    ||t.match(/^(?:can you |please )?(?:build|create|invent|design|make up|come up with)(?: me| us)? (?:a |an )?(.+?) (?:recipe|dish|meal)$/)
+    ||t.match(/^(?:build|create|invent)(?: me| us)? (?:a )?(?:recipe )?(?:with |using )?(.+)$/);
+  if(bm&&/[a-z]{3}/.test(bm[1])&&!/^\d/.test(bm[1]))return answerBuild(bm[1]);
   // flavor pairings
   const pm=t.match(/^(?:so |and |ok |okay |hey )?(?:what|which|whats|what's)(?: else| kind of \w+| things?| flavou?rs?| ingredients?| foods?)? (?:goes?|go|pairs?|works?|tastes? good|is good|are good|would go|should i (?:pair|serve|put|use|add)|can i (?:pair|serve|put|use|add)|do i (?:pair|serve)|to (?:pair|serve)) (?:well |good |great |nicely |best )?(?:with|alongside|together with) (.+)$/)
     ||t.match(/^(?:what are |show me |give me |find |look up )?(?:the )?(?:pairings?|flavou?r pairings?|flavou?r ideas?|matches|flavou?r bible) (?:for|with|on) (.+)$/)
@@ -756,7 +764,156 @@ async function doHandle(raw){
   const pl=plan?` I’ll scale it to ${plan.people*plan.meals.length} servings when you open it.`:"";
   return respond(`${n} ${n===1?"recipe":"recipes"} for <em>${query}</em>.${plan?` Scaling to <em>${plan.people*plan.meals.length} servings</em>.`:""}`,`I found ${n}. ${top.join(". ")}.${n>3?" And more on screen.":""}${pl} Say open the first one, or pick a number.`,"Say “open the first one”")}
 
-/* typed commands go through the same parser */
+/* typed comman/* ================= RECIPE BUILDER (from Flavor Bible pairings) ================= */
+const ROLE_WORDS={
+  protein:"chicken turkey duck quail pheasant squab cornish beef steak brisket veal lamb pork venison rabbit goat salmon tuna cod halibut trout bass snapper sole swordfish mackerel sardines monkfish grouper flounder turbot skate mahi bluefish shrimp scallops crab lobster clams mussels oysters squid calamari octopus tofu eggs",
+  aromatic:"garlic shallots shallot onions onion leeks leek ginger scallions lemongrass",
+  herb:"basil thyme rosemary sage parsley cilantro dill mint tarragon chives oregano marjoram chervil bay lovage savory shiso epazote",
+  acid:"lemon lemons lime limes orange oranges vinegar wine verjus yuzu grapefruit sherry vermouth tamarind",
+  fat:"butter oil cream crème creme yogurt coconut",
+  spice:"cumin coriander paprika cinnamon nutmeg cloves allspice cardamom cayenne chile chiles chili curry saffron anise five-spice turmeric juniper sumac pepper",
+  cond:"horseradish wasabi mustard capers olives anchovies miso soy",
+  cheese:"cheese parmesan feta ricotta mascarpone gorgonzola pecorino goat",
+  nut:"almonds walnuts pecans pistachios hazelnuts pine peanuts sesame cashews macadamia crumbs",
+  sweet:"honey maple sugar molasses caramel vanilla chocolate",
+  veg:"asparagus potatoes potato carrots beets mushrooms spinach kale chard cabbage brussels corn peas beans tomatoes zucchini squash eggplant peppers cauliflower broccoli greens arugula lettuce cucumbers artichokes celery parsnips lentils rice polenta couscous pasta endive radicchio watercress frisée fennel turnips leeks chickpeas",
+  fruit:"apples pears figs peaches plums cherries berries strawberries raspberries blueberries blackberries mangoes pineapple apricots grapes melon nectarines quince rhubarb cranberries dates raisins pomegranate"};
+const ROLE_OF={};Object.entries(ROLE_WORDS).forEach(([r,ws])=>ws.split(" ").forEach(w=>{if(!ROLE_OF[w])ROLE_OF[w]=r}));
+const SKIP=/cuisine|dishes|sauces?\b|soups?|stews?|salads?\b|desserts?|baked goods|beverages|cocktails|^meats?$|^fish$|^game|^poultry|^vegetables|^fruits?$|^salt|^pepper$|^black pepper|stocks?|broths?|^water|^seafood|^shellfish|^nuts$|^herbs$|^spices$|^cheese$|^oil$|^greens$|^liqueurs?|^cognac|^brandy|^rum|^vodka|^gin|^whiskey|^bourbon|^beer|^sake|^kirsch|^grand marnier|^cointreau|^champagne|^port\b|^madeira|^marsala|^amaretto|^chiles?$|^chile peppers$|^sugar$|^bread$|^breads$|ice cream|^custards?/i;
+function roleOf(c){const w=norm(c).split(" ");if(/fennel seed|seeds?,? (fennel|cumin|coriander|caraway|mustard)|caraway/.test(c))return"spice";if(w.includes("pepper")&&/bell|red|green|yellow|roasted/.test(c)&&!/flakes|black|white|pink|cayenne/.test(c))return"veg";
+  if(/oil/.test(c))return"fat";if(/wine|vinegar/.test(c))return"acid";if(/cheese/.test(c))return"cheese";
+  for(let i=w.length-1;i>=0;i--){const r=ROLE_OF[w[i]];if(r)return r}for(const x of w){const r=ROLE_OF[x];if(r)return r}return null}
+function ingName(c){return c.replace(/\s*\(.*?\)/g,"").replace(/^(lemon|lime|orange): .*/i,"$1").replace(/: /," ").trim().toLowerCase()}
+const AMOUNTS=[[/garlic/,3,"cloves","garlic, minced"],[/shallot/,1,"","shallot, minced"],[/leek/,1,"","leek, sliced"],[/onion/,1,"","onion, sliced"],[/ginger/,1,"tbsp","fresh ginger, grated"],[/scallion/,3,"","scallions, sliced"],[/lemongrass/,1,"","stalk lemongrass, minced"],
+  [/rosemary|thyme/,2,"sprigs",null],[/bay/,1,"","bay leaf"],[/lemon|lime|orange|yuzu|grapefruit/,1,"",null,"juice and zest"],[/vinegar/,1,"tbsp",null],[/wine|vermouth|sherry/,0.5,"cups",null],[/verjus/,2,"tbsp","verjus"],
+  [/butter/,2,"tbsp","butter"],[/cream|crème|creme/,0.5,"cups",null],[/yogurt/,0.5,"cups","yogurt"],[/coconut/,1,"cups","coconut milk"],[/oil/,2,"tbsp",null],
+  [/cayenne|saffron|clove/,0.25,"tsp",null],[/cinnamon|nutmeg|allspice|cardamom|anise/,0.5,"tsp",null],[/mustard/,1,"tbsp",null],[/horseradish|wasabi/,1,"tbsp",null],
+  [/anchov/,3,"","anchovy fillets, chopped"],[/caper/,1,"tbsp","capers"],[/olive(?!\s*oil)/,0.25,"cups","olives, pitted"],[/miso/,1,"tbsp","miso"],[/soy/,1,"tbsp","soy sauce"],[/honey|maple|molasses/,1,"tbsp",null],[/sugar/,2,"tbsp",null],[/vanilla/,1,"tsp","vanilla"],[/chocolate/,2,"oz",null]];
+function amountFor(c,role){const n=ingName(c);for(const[re,q,u,label,extra]of AMOUNTS)if(re.test(n))return[q,u,(label||n)+(extra?`, ${extra}`:"")];
+  if(role==="herb")return[2,"tbsp",`${n}, chopped`];if(role==="spice")return[1,"tsp",n];if(role==="cheese")return/mascarpone|ricotta|goat|crème|cream/.test(n)?[0.25,"cups",`${n}, for dolloping`]:[0.25,"cups",`${n}, grated or crumbled`];
+  if(role==="nut")return[0.25,"cups",`${n}, toasted and chopped`];if(role==="veg")return[/potato|squash|beet|parsnip|carrot/.test(n)?1:2,/potato|squash|beet|parsnip|carrot/.test(n)?"lb":"cups",/peas|corn|beans|lentils|rice|couscous|arugula|spinach|greens|watercress|chickpeas|polenta/.test(n)?n:`${n}, cut into bite-size pieces`];
+  if(role==="fruit")return[2,"",`${n}, sliced`];return[1,"",n]}
+function mainKind(n){const r=roleOf(n);if(r==="protein")return/salmon|tuna|cod|halibut|trout|bass|snapper|sole|swordfish|mackerel|sardine|monkfish|grouper|flounder|turbot|skate|mahi|bluefish/.test(n)?"fish":/shrimp|scallop|crab|lobster|clam|mussel|oyster|squid|calamari|octopus/.test(n)?"shellfish":/egg/.test(n)?"eggs":/tofu/.test(n)?"tofu":"meat";return r==="fruit"?"fruit":"veg"}
+function pairKeys(e){if(!e._pk)e._pk=new Set(e.pairs.map(p=>wkey(core(p.t))));return e._pk}
+function entryFor(c){const f=findEntries(c);return f.length&&f[0].sc>=55?follow(f[0]).e:null}
+function buildRecipe(words,seed){
+  const anchors=words.map(w=>{const f=findEntries(w);return f.length?follow(f[0]):null}).filter(Boolean);if(!anchors.length)return null;
+  const main=anchors[0].e,book=anchors[0].b,CUT={pork:"pork chops",beef:"steak",lamb:"lamb chops",chicken:"boneless chicken thighs",duck:"duck breasts",veal:"veal chops",turkey:"turkey cutlets",venison:"venison loin"};
+  let mainName=sname(main.n);mainName=CUT[mainName]||mainName;if(/\beggs?\b/.test(mainName))mainName="eggs";const kind=mainKind(mainName),rnd=rng(seed||7);
+  const others=anchors.slice(1).map(a=>a.e),otherKeys=new Set(others.map(e=>wkey(sname(e.n))));
+  const noise=seed>1000?2.2:0.3;
+  const seen=new Set(),cands=[];
+  [...main.pairs].forEach(p=>{const c=core(p.t).toLowerCase(),k=wkey(c);if(!c||seen.has(k)||SKIP.test(c)||otherKeys.has(k))return;seen.add(k);const role=roleOf(c);if(!role)return;
+    let sc=p.l*2+(role==="sweet"&&/honey|maple|sugar/.test(c)?3:0);others.forEach(o=>{if(pairKeys(o).has(k))sc+=3});if(seed>1000&&lastPicks.has(k))sc-=4;sc+=rnd()*noise;cands.push({c,k,role,l:p.l,sc})});
+  const pick=[],used=new Set();const add=x=>{if(x&&!used.has(x.k)){pick.push(x);used.add(x.k)}};
+  others.forEach(o=>{const c=sname(o.n);add({c,k:wkey(c),role:roleOf(c)==="protein"?"veg":(roleOf(c)||"veg"),l:3,forced:true})});
+  // the book's own trios get first say (only if most of the trio is usable)
+  let affUsed=null;if(!others.length){const trios=(main.aff||[]).map(a=>a.split("+").map(x=>x.trim()).filter(Boolean)).map(a=>({a,hits:a.map(part=>{const k=wkey(core(part));return cands.find(x=>x.k===k)}).filter(Boolean)})).filter(t=>t.hits.length>=2&&t.hits.length>=t.a.length-2);
+    if(trios.length){const t=trios[seed>1000?Math.floor(rnd()*trios.length):0];t.hits.forEach(add);affUsed=[mainName,...t.hits.map(h=>ingName(h.c))].join(" + ")}}
+  const agree=x=>{let n=0;pick.forEach(y=>{const e=entryFor(y.c);if(e&&pairKeys(e).has(x.k))n++;const f=entryFor(x.c);if(f&&pairKeys(f).has(y.k))n++});return n};
+  const best=role=>{const cs=cands.filter(x=>x.role===role&&!used.has(x.k));cs.forEach(x=>x.tot=x.sc+agree(x)*1.2);return cs.sort((a,b)=>b.tot-a.tot)[0]};
+  const need=kind==="fruit"?["sweet","fat","spice","nut","acid","herb"]:["aromatic","fat","acid","herb",kind==="veg"?"cheese":"spice",kind==="veg"?"nut":"veg"];
+  need.forEach(r=>{if(!pick.some(x=>x.role===r)&&(pick.length<6||["fat","acid","herb","aromatic"].includes(r)))add(best(r))});
+  lastPicks=new Set(pick.filter(x=>!x.forced).map(x=>x.k));
+  if(!pick.some(x=>x.role==="fat"&&/oil|butter/.test(x.c)))pick.push({c:kind==="fruit"?"butter":"olive oil",k:kind==="fruit"?"butter":"oil olive",role:"fat",l:0});
+  if(kind==="fruit"&&!pick.some(x=>x.role==="sweet"&&/honey|maple|sugar/.test(x.c)))pick.push({c:"honey",k:"honey",role:"sweet",l:0});
+  if(kind==="fruit"&&!pick.some(x=>/butter/.test(x.c)))pick.push({c:"butter",k:"butter",role:"fat",l:0});
+  if(kind==="meat"&&/brisket|short rib|shank|oxtail|cheek|shoulder/.test(mainName)){const w=cands.find(x=>/wine/.test(x.c)&&!used.has(x.k));if(w){const a=pick.findIndex(x=>x.role==="acid"&&!x.forced);if(a>=0){used.delete(pick[a].k);pick[a]=w}else pick.push(w);used.add(w.k)}}
+  const R=r=>pick.filter(x=>x.role===r);
+  // technique
+  const tech=(main.props&&(main.props.Techniques||main.props.Technique)||"").toLowerCase();
+  let method=kind==="fruit"?"bake":kind==="fish"||kind==="shellfish"?(/sear|sauté|saute|pan/.test(tech)?"sear":/roast|bake/.test(tech)?"roast":/grill/.test(tech)?"grill":"sear")
+    :kind==="meat"?(/brisket|short rib|shank|oxtail|cheek|shoulder/.test(mainName)&&/braise|stew/.test(tech)?"braise":/sear|sauté|saute|pan/.test(tech)?"sear":/roast/.test(tech)?"roast":/grill/.test(tech)?"grill":/braise/.test(tech)?"braise":"sear")
+    :kind==="eggs"?"eggs":/roast|bake/.test(tech)||!tech?"roast":/sauté|saute/.test(tech)?"saute":/raw/.test(tech)?"raw":"roast";
+  if(/raw/.test(tech)&&/greens|lettuce|arugula|cucumber|endive|watercress|frisée/.test(mainName))method="raw";
+  // ingredients (serves 2)
+  const ing=[];const mainQ=kind==="meat"?(method==="braise"?[2,"lb"]:[1,"lb"]):kind==="fish"?[0.75,"lb"]:kind==="shellfish"?[0.75,"lb"]:kind==="eggs"?[4,""]:kind==="tofu"?[14,"oz"]:kind==="fruit"?[4,""]:/potato|squash|beet|parsnip|carrot|sweet potato|turnip/.test(mainName)?[1.5,"lb"]:[1,"lb"];
+  ing.push([mainQ[0],mainQ[1],mainName+(kind==="fruit"?", halved or sliced":kind==="veg"?", trimmed and cut into pieces":"")]);
+  const order=["aromatic","fat","acid","spice","cond","veg","herb","cheese","nut","sweet","fruit","protein"];
+  const fatsFirst=R("fat");const inPick=order.flatMap(r=>R(r));
+  inPick.forEach(x=>{const[a,u,t]=amountFor(x.c,x.role);ing.push([a,u,t])});
+  if(method==="braise")ing.push([2,"cups","stock (chicken or beef)"]);
+  if(method==="bake"){ing.push([1,"","pinch of salt"])}else{ing.push([1,"tsp","kosher salt, plus more to taste"]);ing.push([0.5,"tsp","black pepper"])}
+  // words for the steps
+  const lbl=x=>amountFor(x.c,x.role)[2].split(",")[0].replace(/^(stalk|fresh) /,"");const L=a=>spokenList(a.map(lbl));const nm=x=>x?lbl(x):"";
+  const WOODY=/rosemary|thyme|bay|sage|oregano|marjoram|savory|lovage/i;const cond=R("cond");
+  const aro=[...R("aromatic"),...R("herb").filter(x=>WOODY.test(x.c))],fat=R("fat"),acid=R("acid"),herb=R("herb").filter(x=>!WOODY.test(x.c)),spice=R("spice"),veg=[...R("veg"),...R("fruit").filter(x=>kind!=="fruit")],chs=R("cheese"),nut=R("nut"),swt=R("sweet"),fru=R("fruit");
+  const fat1=fat.find(x=>/oil/.test(x.c))||fat.find(x=>/butter/.test(x.c))||fat[0],fat2=fat.find(x=>x!==fat1&&/butter|cream|crème|yogurt|coconut/.test(x.c));const finish=[...chs,...nut];
+  const acidStep=acid.length?(/wine|vermouth|sherry/.test(nm(acid[0]))?`Pour in the ${nm(acid[0])} and scrape up the browned bits. Simmer 2 minutes until reduced by half.`:`Add the ${nm(acid[0])}${/lemon|lime|orange/.test(nm(acid[0]))?" juice and zest":""} and swirl the pan.`):"";
+  const mins={fish:4,shellfish:2,meat:/chicken|duck|turkey|quail|pork/.test(mainName)?6:4}[kind]||4;
+  let steps=[],facts=[],title="";const forcedP=pick.filter(x=>x.forced);
+  const feat=[...forcedP,...cond,...R("herb"),...acid,...veg.filter(x=>!x.forced),...chs,...nut,...spice].filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,3);const withs=spokenList(feat.map(lbl));
+  if(method==="sear"){title=`Pan-seared ${mainName} with ${withs}`;facts=["Prep 10 min","Cook 20 min","Skillet"];
+    steps=[`Pat the ${mainName} dry and season with the ${spokenList(["salt","pepper",...spice.map(lbl)])}.`,
+      `Heat the ${nm(fat1)} in a heavy skillet over medium-high until it shimmers.`,
+      `Sear the ${mainName} ${mins} minutes per side, until browned${/chicken|turkey/.test(mainName)?" and cooked through (165°F inside)":/pork/.test(mainName)?" and 145°F inside":kind==="meat"?" and cooked to your liking":" and just cooked through"}. ${kind==="shellfish"?"Move to a plate.":"Move to a plate and rest 5 minutes."}`,
+      ...(aro.length?[`Lower the heat to medium. Add the ${L(aro)} and cook 2 minutes, until fragrant.`]:[]),
+      ...(acidStep?[acidStep]:[]),
+      ...(veg.length?[`Add the ${L(veg)} and cook 5 minutes, until tender.`]:[]),
+      ...(cond.length?[`Stir in the ${L(cond)}.`]:[]),
+      ...(fat2?[`Turn off the heat and swirl in the ${nm(fat2)} to make a quick pan sauce.`]:[]),
+      `Stir in the ${herb.length?L(herb):"pan juices"}, taste for salt, and spoon everything over the ${mainName}.`,
+      ...(finish.length?[`Finish with the ${L(finish)}.`]:[])]}
+  else if(method==="roast"){const t=kind==="fish"?12:kind==="shellfish"?8:kind==="meat"?(/chicken|duck/.test(mainName)?35:25):kind==="tofu"?25:25;
+    title=`Roasted ${mainName} with ${withs}`;facts=["Prep 10 min",`Roast ${t} min`,"425°F"];
+    steps=[`Heat the oven to 425°F.`,
+      `Toss the ${spokenList([mainName,...veg.map(lbl)])} with the ${spokenList([nm(fat1),"salt","pepper",...spice.map(lbl),...aro.map(lbl)])} on a sheet pan. Spread it out in one layer.`,
+      `Roast ${t} minutes${kind==="veg"?", turning once, until browned at the edges":kind==="meat"?", until cooked through":", until just cooked through"}.`,
+      ...(acid.length?[`While it roasts, mix the ${nm(acid[0])}${/lemon|lime|orange/.test(nm(acid[0]))?" juice and zest":""}${fat2?` with the ${nm(fat2)}`:""} and a pinch of salt.`]:[]),
+      ...(cond.length?[`Stir the ${L(cond)} into that.`]:[]),
+      `Spoon that over the hot ${mainName}${herb.length?` and scatter the ${L(herb)} on top`:""}.`,
+      ...(finish.length?[`Finish with the ${L(finish)}.`]:[])]}
+  else if(method==="grill"){title=`Grilled ${mainName} with ${withs}`;facts=["Marinate 20 min",`Grill ${mins*2} min`,"High heat"];
+    steps=[`Mix the ${nm(fat1)}${aro.length?`, ${L(aro)}`:""}${acid.length?`, half the ${nm(acid[0])}`:""}${spice.length?`, ${L(spice)}`:""}, salt and pepper.`,
+      `Coat the ${mainName} and let it marinate 20 minutes while the grill heats.`,
+      `Grill over high heat ${mins} minutes per side, until nicely charred.`,`Rest 5 minutes.`,
+      `Finish with the rest of the ${acid.length?nm(acid[0]):"marinade"}${herb.length?` and the ${L(herb)}`:""}${finish.length?`, then the ${L(finish)}`:""}.`]}
+  else if(method==="braise"){title=`Braised ${mainName} with ${withs}`;facts=["Prep 30 min","Oven 2 h 30 min","325°F"];
+    steps=[`Heat the oven to 325°F. Season the ${mainName} well with the salt and pepper.`,
+      `Brown the ${mainName} in the ${nm(fat1)} in a heavy pot over medium-high, about 10 minutes. Set aside.`,
+      `Cook the ${spokenList([...(aro.length?aro.map(lbl):["onion"]),...veg.map(lbl)])} in the same pot 8 minutes, until soft.`,
+      ...(spice.length?[`Stir in the ${L(spice)} for 1 minute.`]:[]),
+      ...(acidStep?[acidStep]:[]),
+      `Return the ${mainName}, add the stock, cover, and braise in the oven 150 minutes, until fork-tender.`,
+      `Skim the fat, stir in the ${herb.length?L(herb):"juices"}, and serve with the sauce spooned over.`,
+      ...(finish.length?[`Finish with the ${L(finish)}.`]:[])]}
+  else if(method==="saute"){title=`Sautéed ${mainName} with ${withs}`;facts=["Prep 10 min","Cook 12 min","Skillet"];
+    steps=[`Heat the ${nm(fat1)} in a large skillet over medium-high.`,`Add the ${mainName}${veg.length?` and ${L(veg)}`:""} with the salt. Cook 8 minutes, stirring now and then, until tender and browned in spots.`,
+      ...(aro.length?[`Add the ${L(aro)}${spice.length?` and ${L(spice)}`:""} and cook 1 minute more.`]:[]),
+      ...(acidStep?[acidStep]:[]),herb.length||fat2?`Toss with the ${spokenList([...herb.map(lbl),...(fat2?[nm(fat2)]:[])])}.`:`Season with more pepper and serve.`,...(finish.length?[`Finish with the ${L(finish)}.`]:[])]}
+  else if(method==="raw"){title=`${mainName.replace(/^./,c=>c.toUpperCase())} salad with ${withs}`;facts=["Prep 15 min","No cooking"];
+    steps=[`Whisk the ${acid.length?nm(acid[0]):"lemon"}${/lemon|lime|orange/.test(acid.length?nm(acid[0]):"")?" juice and zest":""} with the ${nm(fat1)}${aro.length?`, ${L(aro)}`:""}, salt and pepper.`,
+      `Toss the ${mainName}${veg.length?` and ${L(veg)}`:""} with the dressing.`,`Top with the ${[...herb,...finish].length?L([...herb,...finish]):"pepper"} and serve right away.`]}
+  else if(method==="eggs"){title=`Eggs with ${withs}`;facts=["Prep 5 min","Cook 10 min"];
+    steps=[`Whisk the eggs with the salt and pepper.`,`Heat the ${nm(fat2||fat1)} in a nonstick pan over medium-low.`,...(aro.length?[`Cook the ${L(aro)} 2 minutes.`]:[]),
+      ...(veg.length?[`Add the ${L(veg)} and cook 3 minutes.`]:[]),`Add the eggs and stir slowly 4 minutes, until softly set.`,`Fold in the ${[...herb,...finish].length?L([...herb,...finish]):"pepper"}.`]}
+  else{title=`Baked ${mainName} with ${spokenList([...swt,...spice.slice(0,1),...nut].slice(0,3).map(x=>ingName(x.c)))}`;facts=["Prep 10 min","Bake 25 min","375°F"];
+    steps=[`Heat the oven to 375°F.`,`Arrange the ${spokenList([mainName,...fru.filter(x=>!new RegExp(mainName.split(" ")[0]).test(x.c)).map(lbl)])} cut side up in a baking dish.`,
+      `Drizzle with the ${L(swt.filter(x=>/honey|maple|sugar|molasses/.test(x.c)))} and dot with the butter${spice.length?`. Sprinkle with the ${L(spice)}`:""}.`,
+      ...(swt.some(x=>/vanilla/.test(x.c))?[`Stir the vanilla into the pan juices halfway through.`]:[]),
+      `Bake 25 minutes, until soft and bubbling.`,...(swt.some(x=>/caramel|chocolate/.test(x.c))?[`Warm the ${L(swt.filter(x=>/caramel|chocolate/.test(x.c)))} and drizzle it over.`]:[]),...(acid.length?[`Squeeze over the ${nm(acid[0])}.`]:[]),
+      `Serve warm${fat.find(x=>/cream|crème|yogurt|mascarpone/.test(x.c))?` with the ${nm(fat.find(x=>/cream|crème|yogurt|mascarpone/.test(x.c)))}`:""}${nut.length?`, scattered with the ${L(nut)}`:""}${herb.length?` and a little ${L(herb)}`:""}.`]}
+  ing.forEach(r=>{r[2]=r[2].replace(/\s+/g," ")});
+  const pages=[...new Set([main.p,...others.map(o=>o.p)])];
+  const why=pick.filter(x=>x.l>=2).slice(0,4).map(x=>ingName(x.c));
+  const id="made-"+Date.now().toString(36);
+  const r={short:mainName.replace(/^./,c=>c.toUpperCase()),title:title.replace(/^./,c=>c.toUpperCase()),from:`Bobbity creation · pairings from ${book.title}, page${pages.length>1?"s":""} ${pages.join(", ")}`,serves:2,facts,ing,steps,made:true,why,aff:affUsed,words};
+  return{id,r}}
+let made=store.get("made",{});Object.entries(made).forEach(([id,r])=>{FULL[id]=r});renderTonight();
+function saveMade(id,r){made[id]=r;const ks=Object.keys(made);if(ks.length>20)delete made[ks[0]];store.set("made",made)}
+let lastBuild=null,lastPicks=new Set();
+async function answerBuild(q,again){
+  if(!REF.some(b=>b.kind==="pairings"))return respond("I need The Flavor Bible first. Add its book file in the Library.","I need The Flavor Bible loaded first. Open the library and add its book file.","Library → Add a book file");
+  const words=q.replace(/\b(please|tonight|for dinner|for lunch|for me|for us|using|with|around|from|that has|some)\b/g," ").split(/ and | & |, | plus /).map(x=>x.replace(/^(a|an|the|some)\s+/,"").trim()).filter(Boolean).slice(0,3);
+  if(!words.length)return respond("What should I build it around?",undefined,"Try “build me a recipe with salmon”");
+  setState("thinking",`Building something with <em>${spokenList(words)}</em>…`,"");await wait(reduce?0:400);
+  const seed=again?Math.floor(Math.random()*1e6)+1:7+words.join("").length;
+  const out=buildRecipe(words,seed);
+  if(!out)return respond(`I couldn’t find <em>${spokenList(words)}</em> in The Flavor Bible.`,`I couldn't find ${spokenList(words)} in The Flavor Bible. Try a main ingredient like salmon, chicken, or squash.`);
+  lastBuild=words;FULL[out.id]=out.r;saveMade(out.id,out.r);openCook(out.id,false,true);
+  const r=out.r;setState("speaking",`Here’s an idea: <em>${r.title}</em>.`,"Say “another one” for a different idea");
+  await say(`Here's an idea. ${r.title}. ${r.why.length?`The book rates ${spokenList(r.why)} as strong matches. `:""}${r.aff?`It's built on a classic combo from the book: ${spokenList(r.aff.split("+").map(x=>x.trim()))}. `:""}It serves ${r.serves} as written. Tell me how many people, say next step to start, or say another one.`)}
+
 /* categories */
 function flavorBooks(){return REF.filter(b=>b.kind==="pairings")}
 function openFlavor(filter){closeLow();const bks=flavorBooks(),body=$("flavBody");
