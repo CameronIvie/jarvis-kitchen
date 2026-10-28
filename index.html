@@ -176,6 +176,18 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
 .addbook{width:100%;margin-top:14px;padding:16px;border-radius:12px;border:0;background:var(--copper);color:var(--iron);font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 0 0 3px color-mix(in srgb,var(--copper) 30%,transparent)}
 .addbook:hover{background:var(--copper-hi)}
 .rm{background:none;border:0;color:var(--ink-dim);font-size:12px;cursor:pointer;padding:4px;font-family:var(--mono)}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cat{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;border:1px solid var(--copper);background:color-mix(in srgb,var(--copper) 14%,var(--iron-2));text-align:left;cursor:pointer}
+.cat:hover{background:color-mix(in srgb,var(--copper) 24%,var(--iron-2))}
+.cat .ci{font-size:26px;line-height:1}
+.cat b{display:block;font-family:var(--display);font-weight:500;font-size:18px;color:var(--ink)}
+.cat small{display:block;font-size:13px;color:var(--copper-hi);margin-top:2px}
+.ffilter{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--iron);border:1px solid var(--iron-3);border-radius:999px;padding:11px 16px;margin:0 0 12px;-webkit-user-select:text;user-select:text}
+.letter{font-family:var(--mono);font-size:12px;color:var(--copper-hi);letter-spacing:.1em;margin:12px 0 6px;position:sticky;top:-16px;background:var(--iron-2);padding:6px 0}
+.fl{display:flex;flex-wrap:wrap;gap:6px}
+.fe{font-size:15px;padding:7px 12px;border-radius:999px;border:1px solid var(--iron-3);background:var(--iron);cursor:pointer;text-align:left}
+.fe:hover{border-color:var(--copper)}
+.fe small{color:var(--ink-dim);font-family:var(--mono);font-size:11px;margin-left:6px}
 @media (prefers-reduced-motion:reduce){.sheet,.toast{transition:none}.tm.done,.talk.live{animation:none}}
 </style>
 </head>
@@ -203,12 +215,10 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
 
   <footer>
     <div class="status" id="status" aria-live="polite">Tap the brain and talk</div>
-    <div class="hint" id="hint">Try “short ribs” or “set a timer for pasta for 9 minutes”</div>
-    <div class="asks" id="asks">
-      <button class="chip" type="button" data-q="short ribs">Short ribs</button>
-      <button class="chip" type="button" data-q="chicken thighs">Chicken thighs</button>
-      <button class="chip" type="button" data-q="apfelkuchen">Oma’s Apfelkuchen</button>
-      <button class="chip" type="button" data-q="what goes with figs">What goes with figs?</button>
+    <div class="hint" id="hint">Try “what goes with salmon?” or “set a timer for 10 minutes”</div>
+    <div class="asks cats" id="asks">
+      <button class="cat" type="button" data-open="flavor"><span class="ci">🌿</span><span><b>Flavor guide</b><small id="flavN">What goes with what</small></span></button>
+      <button class="cat" type="button" data-open="recipes"><span class="ci">📖</span><span><b>Recipes</b><small id="recN">Cook step by step</small></span></button>
     </div>
     <form class="searchrow" id="form" autocomplete="off">
       <input id="q" type="text" enterkeyhint="go" placeholder="Or type anything you’d say…" aria-label="Type a request">
@@ -228,6 +238,11 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
     <div class="list" id="libList"></div>
     <input type="file" id="bookFile" accept=".json,application/json" hidden>
     <p class="note">Book files stay on this device. They are never uploaded anywhere.</p>
+  </section>
+
+  <section class="sheet" id="flavS" aria-label="Flavor guide">
+    <div class="head"><h2>Flavor guide</h2><button class="close" type="button" data-close="flavS">Close</button></div>
+    <div id="flavBody"></div>
   </section>
 
   <section class="sheet" id="pairS" aria-label="Flavor pairings">
@@ -403,7 +418,7 @@ function wkey(x){return norm(x).split(" ").filter(w=>w&&!FILLER.has(w)).map(sing
 function core(t){t=t.replace(/^\*/,"").trim();const m=t.match(/^([^,:(]+), ([A-Za-zÀ-ÿ-]+)$/);if(m&&!/^(esp|e|etc)$/i.test(m[2]))return`${m[2]} ${m[1]}`;return t.split(/,|:|\(| esp\.| e\.g\./)[0].trim()}
 function indexBooks(){REF.forEach(b=>{if(b.kind!=="pairings")return;b.entries.forEach(e=>{e.key=wkey(e.n.replace(/\(.*?\)/g,""));e.full=wkey(e.n)})})}
 async function loadBooks(){try{REF=(await DB.all())||[]}catch(e){REF=[]}indexBooks();updateLibCount()}
-function updateLibCount(){$("nBooks").textContent=Object.keys(BOOKS).length+REF.length}
+function updateLibCount(){$("nBooks").textContent=Object.keys(BOOKS).length+REF.length;if(window.updateCats)try{updateCats()}catch(e){}}
 function findEntries(q,all){const k=wkey(q),out=[];if(!k)return out;const qs=k.split(" ");
   REF.forEach(b=>{if(b.kind!=="pairings")return;b.entries.forEach(e=>{let sc=0;if(e.full===k)sc=100;else if(e.key===k)sc=95;else{const es=e.key.split(" ");if(qs.every(w=>es.includes(w)))sc=60-es.length+(/in general|fresh/i.test(e.n)?5:0)+(e.pairs.length?0:-20);else if(es.every(w=>qs.includes(w))&&es.length)sc=30+es.length}
     if(sc)out.push({b,e,sc})})});
@@ -570,7 +585,7 @@ build();addEventListener("resize",()=>{build();placeCook()});requestAnimationFra
 let busy=false;
 function setState(s,status,hint){state=s;$("status").innerHTML=status;$("jsay").innerHTML=s==="idle"?"":status;if(hint!==undefined)$("hint").textContent=hint;$("talk").classList.toggle("live",s==="listening")}
 function idle(h){setState("idle","Tap the brain and talk",h===undefined?"":h)}
-function closeLow(){["sheet","lib","helpS","pairS"].forEach(i=>$(i).classList.remove("open"))}
+function closeLow(){["sheet","lib","helpS","pairS","flavS"].forEach(i=>$(i).classList.remove("open"))}
 document.addEventListener("click",e=>{const c=e.target.closest("[data-close]");if(!c)return;$(c.dataset.close).classList.remove("open");if(c.dataset.close==="cook")closeCook()});
 let lastHits=[];
 function cardHTML(r,i){const b=BOOKS[r.b];return`<span class="num">${i+1}</span><span class="rname">${r.n}<span class="tag ${r.full?"full":"index"}">${r.full?"Full recipe":"In the book"}</span></span><span class="where">page<b>${r.p}</b></span><span class="book">${b.title} · ${b.shelf}</span>`}
@@ -690,6 +705,8 @@ async function doHandle(raw){
       label=label.replace(/\b(set|start|a|an|the|timer|minute|minutes|hour|hours|second|seconds|me|please|can you|could you|jarvis|bobbiti|bobby|tea)\b/g,"").replace(/\s+/g," ").trim();
       if(!label||/^\d/.test(label))label="Timer";if(addTimer(cap(label),d,true)){return respond(`<em>${cap(label)}</em> timer · ${human(d)}.`,`${cap(label)} timer set for ${spoken(d)}.`)}return}
     return respond("How long should the timer be?",undefined,"Try “set a timer for pasta for 9 minutes”")}
+  if(/^(open |show( me)? |go to )?(the )?(flavou?r (guide|bible)|pairings)$/.test(t)){openFlavor();return respond("Here’s the flavor guide.")}
+  if(/^(open |show( me)? |go to |browse )?(the |all )?(recipes|recipe list|cookbooks?)$/.test(t)){openRecipes();return respond("Here are the recipes.")}
   // flavor pairings
   const pm=t.match(/^(?:so |and |ok |okay |hey )?(?:what|which|whats|what's)(?: else| kind of \w+| things?| flavou?rs?| ingredients?| foods?)? (?:goes?|go|pairs?|works?|tastes? good|is good|are good|would go|should i (?:pair|serve|put|use|add)|can i (?:pair|serve|put|use|add)|do i (?:pair|serve)|to (?:pair|serve)) (?:well |good |great |nicely |best )?(?:with|alongside|together with) (.+)$/)
     ||t.match(/^(?:what are |show me |give me |find |look up )?(?:the )?(?:pairings?|flavou?r pairings?|flavou?r ideas?|matches|flavou?r bible) (?:for|with|on) (.+)$/)
@@ -740,7 +757,23 @@ async function doHandle(raw){
   return respond(`${n} ${n===1?"recipe":"recipes"} for <em>${query}</em>.${plan?` Scaling to <em>${plan.people*plan.meals.length} servings</em>.`:""}`,`I found ${n}. ${top.join(". ")}.${n>3?" And more on screen.":""}${pl} Say open the first one, or pick a number.`,"Say “open the first one”")}
 
 /* typed commands go through the same parser */
-$("asks").addEventListener("click",e=>{const b=e.target.closest(".chip");if(b){unlockAudio();handle(b.dataset.q)}});
+/* categories */
+function flavorBooks(){return REF.filter(b=>b.kind==="pairings")}
+function openFlavor(filter){closeLow();const bks=flavorBooks(),body=$("flavBody");
+  if(!bks.length){body.innerHTML=`<div class="empty">The Flavor Bible isn’t on this device yet.</div><button class="addbook" type="button" onclick="$('flavS').classList.remove('open');$('libBtn').click()">Open Library to add it</button>`;$("flavS").classList.add("open");return}
+  const all=bks.flatMap(b=>b.entries.filter(e=>e.pairs.length).map(e=>({b,e}))).sort((x,y)=>x.e.n.localeCompare(y.e.n));
+  body.innerHTML=`<input class="ffilter" id="fq" type="search" placeholder="Filter ${all.length} ingredients…" aria-label="Filter ingredients"><div id="fList"></div>`;
+  const draw=q=>{q=norm(q||"");const hit=all.filter(o=>!q||norm(o.e.n).includes(q));let h="",L="";
+    hit.forEach((o,i)=>{const l=o.e.n[0].toUpperCase();if(l!==L){if(L)h+="</div>";h+=`<div class="letter">${l}</div><div class="fl">`;L=l}
+      h+=`<button type="button" class="fe" data-fi="${all.indexOf(o)}">${o.e.n}<small>${o.e.pairs.length}</small></button>`});
+    $("fList").innerHTML=(h?h+"</div>":`<div class="empty">Nothing matches.</div>`)};
+  draw(filter);$("fq").value=filter||"";$("fq").oninput=e=>draw(e.target.value);
+  $("fList").onclick=e=>{const b=e.target.closest("[data-fi]");if(!b)return;const r=showEntry(all[+b.dataset.fi]);setState("speaking",`<em>${r.e.n}</em> · page ${r.e.p}`,"Say “what goes with…” any time")};
+  $("flavS").scrollTop=0;$("flavS").classList.add("open")}
+function openRecipes(){closeLow();const hits=[...RECIPES].sort((a,b)=>(b.full?1:0)-(a.full?1:0)||a.n.localeCompare(b.n));showResults(`Recipes · ${hits.length}`,hits)}
+function updateCats(){const f=flavorBooks();$("flavN").textContent=f.length?`${f.reduce((n,b)=>n+b.entries.length,0)} ingredients`:"Add The Flavor Bible";$("recN").textContent=`${RECIPES.length} recipes · samples`}
+$("asks").addEventListener("click",e=>{const b=e.target.closest("[data-open]");if(!b)return;unlockAudio();b.dataset.open==="flavor"?openFlavor():openRecipes()});
+
 $("form").addEventListener("submit",e=>{e.preventDefault();const v=$("q").value.trim();if(!v)return;$("q").value="";$("q").blur();unlockAudio();handle(v)});
 if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
 if(!SR)$("hint").textContent="Voice isn’t available in this browser. Type below instead.";

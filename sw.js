@@ -1,6 +1,6 @@
 // Bobbity offline support: always try the network first so updates show up,
 // fall back to the last saved copy when there is no connection.
-const CACHE="bobbity-v2";
+const CACHE="bobbity-v3";
 const CORE=["./","./index.html","./manifest.webmanifest","./icon-180.png","./icon-192.png","./icon-512.png"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
