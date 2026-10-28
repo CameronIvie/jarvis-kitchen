@@ -57,9 +57,10 @@ header{display:flex;justify-content:space-between;align-items:flex-start;gap:12p
 /* stage */
 .stage{position:relative;min-height:0}
 canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer;touch-action:manipulation}
-.panel{position:absolute;top:2px;z-index:1;background:none;border:1px solid transparent;border-radius:10px;padding:4px 6px;font-family:var(--mono);font-size:11px;color:var(--ink-dim);line-height:1.6;cursor:pointer;text-align:left}
+.panel{position:absolute;top:2px;z-index:1;background:color-mix(in srgb,var(--iron-2) 85%,transparent);border:1px solid var(--iron-3);border-radius:10px;padding:4px 6px;font-family:var(--mono);font-size:11px;color:var(--ink-dim);line-height:1.6;cursor:pointer;text-align:left}
 .panel b{color:var(--ink);font-weight:600}
-.panel.l{left:-6px} .panel.r{right:-6px;text-align:right}
+.panel.l{left:0} .panel.r{right:0;text-align:right}
+.panel.l{border-color:var(--copper)}
 .panel .go{color:var(--copper-hi)}
 footer{display:grid;gap:10px;text-align:center}
 .status{font-family:var(--display);font-weight:500;font-size:clamp(20px,5.4vw,30px);letter-spacing:-.01em;min-height:1.3em;text-wrap:balance}
@@ -172,7 +173,8 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
 .avoid .pi{border-color:var(--alarm);color:var(--alarm)}
 .pagebtn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:12px 14px;margin:2px 0 14px;background:var(--iron);border:1px solid var(--iron-3);border-radius:12px;text-align:left}
 .pagebtn b{font-family:var(--display);font-size:28px;color:var(--copper-hi);font-weight:500}
-.addbook{width:100%;margin-top:12px;padding:13px;border-radius:12px;border:1px dashed var(--copper);background:none;color:var(--copper-hi);font-size:15px;cursor:pointer}
+.addbook{width:100%;margin-top:14px;padding:16px;border-radius:12px;border:0;background:var(--copper);color:var(--iron);font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 0 0 3px color-mix(in srgb,var(--copper) 30%,transparent)}
+.addbook:hover{background:var(--copper-hi)}
 .rm{background:none;border:0;color:var(--ink-dim);font-size:12px;cursor:pointer;padding:4px;font-family:var(--mono)}
 @media (prefers-reduced-motion:reduce){.sheet,.toast{transition:none}.tm.done,.talk.live{animation:none}}
 </style>
@@ -222,8 +224,8 @@ h3{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:upp
 
   <section class="sheet" id="lib" aria-label="Library">
     <div class="head"><h2>Library</h2><button class="close" type="button" data-close="lib">Close</button></div>
+    <button class="addbook" type="button" id="addBook" style="margin:0 0 14px">+ Add a book file</button>
     <div class="list" id="libList"></div>
-    <button class="addbook" type="button" id="addBook">+ Add a book file</button>
     <input type="file" id="bookFile" accept=".json,application/json" hidden>
     <p class="note">Book files stay on this device. They are never uploaded anywhere.</p>
   </section>
