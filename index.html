@@ -763,7 +763,8 @@ async function doHandle(raw){
   const pl=plan?` I’ll scale it to ${plan.people*plan.meals.length} servings when you open it.`:"";
   return respond(`${n} ${n===1?"recipe":"recipes"} for <em>${query}</em>.${plan?` Scaling to <em>${plan.people*plan.meals.length} servings</em>.`:""}`,`I found ${n}. ${top.join(". ")}.${n>3?" And more on screen.":""}${pl} Say open the first one, or pick a number.`,"Say “open the first one”")}
 
-/* typed commanconst BUILDER_ON=false; // hidden until a real AI writes the recipes
+/* typed commands go through the same parser */
+const BUILDER_ON=false; // hidden until a real AI writes the recipes
 /* ================= RECIPE BUILDER (from Flavor Bible pairings) ================= */
 const ROLE_WORDS={
   protein:"chicken turkey duck quail pheasant squab cornish beef steak brisket veal lamb pork venison rabbit goat salmon tuna cod halibut trout bass snapper sole swordfish mackerel sardines monkfish grouper flounder turbot skate mahi bluefish shrimp scallops crab lobster clams mussels oysters squid calamari octopus tofu eggs",
